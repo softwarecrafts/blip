@@ -1,6 +1,6 @@
 # Landing page
 
-Static marketing site for Claude Chat Status. No build step, no dependencies —
+Static marketing site for Blip. No build step, no dependencies —
 just `index.html` + `styles.css` + `main.js` (fonts load from Google Fonts).
 
 ## Preview locally
@@ -30,8 +30,10 @@ the wording.
 
 ## Design
 
-"Editorial Triage" — warm paper (`#f4f1ea`), signal red (`#e5484d`), warm dark
-(`#211f1c`), matching the extension icon. Fraunces (display) / Hanken Grotesk
-(body) / JetBrains Mono (markers & code). The red status dot recurs as the motif
-throughout. Fully responsive; reveal-on-scroll is progressive enhancement with a
-safety-net fallback so content never stays hidden.
+"Instrument / Scope" — a radar motif: dark phosphor grounds for signature
+moments (hero, privacy, final CTA), phosphor green (`#2fd6a6`) as the primary
+accent, and a hot contact-red (`#ff5a4d`) reserved strictly for the "waiting on
+you" state — mirroring the extension's radar icon. JetBrains Mono carries the
+operator voice; Fraunces adds warmth in display; Hanken Grotesk reads long-form.
+Fully responsive; reveal-on-scroll is progressive enhancement with a safety-net
+fallback so content never stays hidden.

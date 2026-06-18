@@ -1,8 +1,8 @@
-# Privacy Policy — Claude Chat Status
+# Privacy Policy — Blip
 
 _Last updated: 2026-06-18_
 
-Claude Chat Status is a browser extension that labels your claude.ai chat
+Blip is a browser extension that labels your claude.ai chat
 titles based on status markers in your conversations. This policy explains
 exactly what it touches.
 

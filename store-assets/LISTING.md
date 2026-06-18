@@ -4,7 +4,7 @@ Paste-ready text for the developer dashboard, plus the image shot-list.
 
 ## Name
 
-Claude Chat Status
+Blip
 
 ## Summary (≤132 chars)
 
@@ -22,7 +22,7 @@ Productivity
 > **Know which Claude conversations need you.**
 >
 > claude.ai gives you one long, flat list of chats with no sense of which ones
-> are finished and which are still waiting on your reply. Claude Chat Status
+> are finished and which are still waiting on your reply. Blip
 > fixes that.
 >
 > It adds a 🔴 prefix to chats where the ball is in your court, and a ✅ prefix

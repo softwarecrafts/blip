@@ -176,7 +176,7 @@ async function sweep() {
     await chrome.storage.local.set({ seen: pruned });
 
     const waiting = convos.filter((c) => c.name.startsWith('🔴')).length;
-    chrome.action.setBadgeBackgroundColor({ color: '#b91c1c' });
+    chrome.action.setBadgeBackgroundColor({ color: '#e23f33' }); // Blip contact-red
     chrome.action.setBadgeText({ text: waiting ? String(waiting) : '' });
   } catch (e) {
     console.error('[claude-chat-status] sweep failed:', e);
