@@ -262,12 +262,16 @@ a { color: inherit; }
   position: absolute; width: 12px; height: 12px; border-radius: 50%;
   transform: translate(-50%, -50%);
 }
-.contact.r { background: var(--red); box-shadow: 0 0 10px rgba(255, 90, 77, 0.95); animation: ping 4.4s ease-out infinite; }
+/* Red contacts flare as the sweep beam reaches them. Each shares the sweep's
+   4.4s period but carries a negative animation-delay equal to its angle around
+   the dial (clockwise from 12 o'clock), so its flash lands when the beam passes.
+   Delays are set inline per-contact in index.html. */
+.contact.r { background: var(--red); animation: ping 4.4s ease-out infinite; }
 .contact.g { background: var(--green); box-shadow: 0 0 9px rgba(47, 214, 166, 0.8); opacity: 0.65; }
 @keyframes ping {
-  0%, 18% { box-shadow: 0 0 0 0 rgba(255, 90, 77, 0.6), 0 0 10px rgba(255, 90, 77, 0.95); }
-  40%     { box-shadow: 0 0 0 12px rgba(255, 90, 77, 0), 0 0 10px rgba(255, 90, 77, 0.95); }
-  100%    { box-shadow: 0 0 0 0 rgba(255, 90, 77, 0), 0 0 10px rgba(255, 90, 77, 0.95); }
+  0%   { box-shadow: 0 0 0 0 rgba(255, 90, 77, 0.7), 0 0 16px 2px rgba(255, 90, 77, 1); }
+  22%  { box-shadow: 0 0 0 14px rgba(255, 90, 77, 0), 0 0 11px rgba(255, 90, 77, 0.55); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 90, 77, 0), 0 0 4px rgba(255, 90, 77, 0.4); }
 }
 @media (prefers-reduced-motion: reduce) { .contact.r { animation: none; } }
 .contact .tag {
