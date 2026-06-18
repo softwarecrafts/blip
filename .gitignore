@@ -1,0 +1,4 @@
+.DS_Store
+node_modules/
+*.zip
+store-assets/screenshots/*.local.*

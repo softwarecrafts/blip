@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Claude Chat Status — Settings</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        font: 14px/1.5 -apple-system, system-ui, sans-serif;
+        max-width: 520px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+      h1 { font-size: 18px; }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 14px 0;
+        border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+      }
+      .row label { font-weight: 600; }
+      .row .desc { opacity: 0.7; font-size: 13px; margin-top: 2px; }
+      .control { margin-left: auto; flex: none; }
+      input[type='number'] { width: 56px; font: inherit; padding: 3px 6px; }
+      #saved { color: #15803d; font-size: 13px; height: 18px; margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <h1>Claude Chat Status</h1>
+    <p class="desc">
+      Labels your claude.ai chats from the 🔴/✅ markers Claude leaves in its
+      replies. Needs the preference prompt set in your Claude profile —
+      <a id="setup" href="#">view setup</a>.
+    </p>
+
+    <div class="row">
+      <div>
+        <label for="enabled">Enabled</label>
+        <div class="desc">Master switch. When off, no chats are touched.</div>
+      </div>
+      <div class="control"><input type="checkbox" id="enabled" /></div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="mirrorStar">Mirror status to stars</label>
+        <div class="desc">
+          Star 🔴 chats and unstar ✅ ones, so the Starred section becomes your
+          queue on mobile. Off by default — leaves your manual stars alone.
+        </div>
+      </div>
+      <div class="control"><input type="checkbox" id="mirrorStar" /></div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="pollMinutes">Sweep interval</label>
+        <div class="desc">
+          How often to re-check all chats (catches ones you finished on mobile).
+          The chat you're actively viewing updates instantly regardless.
+        </div>
+      </div>
+      <div class="control"><input type="number" id="pollMinutes" min="1" max="120" /> min</div>
+    </div>
+
+    <div id="saved"></div>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

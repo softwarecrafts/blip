@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Set up Claude Chat Status</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        font: 15px/1.6 -apple-system, system-ui, sans-serif;
+        max-width: 640px;
+        margin: 48px auto;
+        padding: 0 24px;
+      }
+      h1 { font-size: 22px; }
+      h2 { font-size: 16px; margin-top: 32px; }
+      ol { padding-left: 20px; }
+      li { margin: 10px 0; }
+      textarea {
+        width: 100%;
+        height: 200px;
+        font: 13px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+        background: color-mix(in srgb, currentColor 5%, transparent);
+        color: inherit;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      .actions { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+      button, a.btn {
+        font: inherit;
+        font-weight: 600;
+        padding: 9px 16px;
+        border-radius: 8px;
+        border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+        background: none;
+        color: inherit;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      a.btn.primary { background: #b91c1c; color: #fff; border-color: #b91c1c; }
+      .note { opacity: 0.7; font-size: 13px; }
+      code { font-family: ui-monospace, Menlo, monospace; }
+    </style>
+  </head>
+  <body>
+    <h1>🔴 Claude Chat Status</h1>
+    <p>
+      This adds a 🔴 / ✅ prefix to your claude.ai chat titles so you can see at
+      a glance which conversations are <strong>waiting on you</strong> versus
+      done — on desktop and mobile. It works by reading a small status marker
+      that Claude leaves at the end of its replies, which you enable with a
+      one-time preference below.
+    </p>
+
+    <h2>Step 1 — Add the preference to your Claude profile</h2>
+    <p>Copy this, then paste it into your Claude personal preferences:</p>
+    <textarea id="prompt" readonly>End every substantive reply with exactly one status line as the final line, choosing whichever is true:
+
+🔴 Waiting on you: <one short clause saying what you need from me>
+✅ Resolved — safe to archive this chat.
+
+Rules:
+- Use 🔴 whenever the next action is mine — you asked a question, offered options, or need a decision, information, or anything else from me.
+- Use ✅ only when the conversation has reached a natural conclusion and nothing is pending from either of us.
+- The status line must be the last line of the reply, starting with the emoji.
+- Skip the status line entirely for trivial or quick factual exchanges.
+- Never start a line with 🔴 or ✅ for any other purpose — automated tooling parses these markers from my chat history.</textarea>
+    <div class="actions">
+      <button id="copy">Copy prompt</button>
+      <a class="btn primary" id="open-settings" href="https://claude.ai/settings/profile" target="_blank"
+        >Open Claude settings →</a
+      >
+    </div>
+    <p class="note">
+      In Claude settings, look for the personal-preferences box (often labelled
+      “What personal preferences should Claude consider in responses?”) and
+      paste it there. It appends to anything already in that box.
+    </p>
+
+    <h2>Step 2 — That's it</h2>
+    <p>
+      From now on, when Claude ends a reply with 🔴, the chat title gets a 🔴
+      prefix and the toolbar badge counts it. When a chat resolves, it flips to
+      ✅. Click the toolbar icon any time to see your “waiting on you” list.
+    </p>
+    <p class="note">
+      Tweak behaviour (star mirroring, sweep interval) in
+      <a id="open-options" href="#">Settings</a>. Existing chats stay untouched
+      until Claude leaves a marker in them — nothing to migrate.
+    </p>
+
+    <script src="onboarding.js"></script>
+  </body>
+</html>

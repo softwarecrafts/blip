@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Claude Chat Status",
+  "version": "0.1.0",
+  "description": "Automatically prefixes claude.ai chat titles with 🔴/✅ based on status markers Claude leaves in its replies.",
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["alarms", "storage"],
+  "host_permissions": ["https://claude.ai/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": { "page": "options.html", "open_in_tab": true },
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "action": {
+    "default_title": "Claude Chat Status",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  }
+}
