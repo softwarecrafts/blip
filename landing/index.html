@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Claude Chat Status — know which Claude chats are waiting on you</title>
+    <meta
+      name="description"
+      content="A free, open-source Chrome extension that labels your claude.ai chats with 🔴 (waiting on you) or ✅ (done) — on desktop and mobile. Your conversations finally get an inbox."
+    />
+    <meta property="og:title" content="Claude Chat Status" />
+    <meta
+      property="og:description"
+      content="Know which Claude chats are waiting on you. 🔴 / ✅ labels for claude.ai, synced to mobile. Open source, private, no server."
+    />
+    <meta property="og:type" content="website" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23211f1c'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23e5484d'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- ░░ NAV ░░ -->
+    <header class="nav">
+      <a class="brand" href="#top" aria-label="Claude Chat Status home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Chat&nbsp;Status</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#problem">Why</a>
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#faq">FAQ</a>
+        <a class="nav-cta" href="#" data-placeholder="GitHub URL TBD">GitHub ↗</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <!-- ░░ HERO ░░ -->
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="live-dot" aria-hidden="true"></span> A companion for claude.ai</p>
+          <h1>
+            Know which Claude chats are <em>waiting on you.</em>
+          </h1>
+          <p class="lede">
+            claude.ai gives you one endless list with no sense of what's done and what still
+            needs a reply. <strong>Chat Status</strong> adds a
+            <span class="chip chip-red">🔴 waiting</span> or
+            <span class="chip chip-green">✅ done</span> label to every chat title —
+            on desktop <em>and</em> mobile. Your conversations finally get an inbox.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#" data-placeholder="GitHub URL TBD">
+              Get it on GitHub
+            </a>
+            <a class="btn btn-ghost" href="#" data-placeholder="Chrome Web Store URL TBD">
+              Chrome Web Store
+              <span class="soon">soon</span>
+            </a>
+          </div>
+          <p class="microcopy">Free &amp; open source · No account · No server · MIT licensed</p>
+        </div>
+
+        <!-- Faux claude.ai sidebar: the value, shown -->
+        <div class="hero-demo reveal">
+          <div class="window">
+            <div class="window-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="window-title">claude.ai</span>
+            </div>
+            <div class="sidebar">
+              <div class="sidebar-head">Your chats</div>
+              <ul class="chats">
+                <li class="chat waiting"><span class="m">🔴</span> Boiler quote — supplier reply</li>
+                <li class="chat done"><span class="m">✅</span> Holiday itinerary for August</li>
+                <li class="chat waiting"><span class="m">🔴</span> Tax return — figures to confirm</li>
+                <li class="chat"><span class="m"></span> Recipe ideas for Friday</li>
+                <li class="chat done"><span class="m">✅</span> Django migration plan</li>
+                <li class="chat waiting"><span class="m">🔴</span> Mortgage broker follow-up</li>
+                <li class="chat"><span class="m"></span> Weekend reading list</li>
+              </ul>
+            </div>
+          </div>
+          <div class="badge-pop" aria-hidden="true">
+            <span class="badge-dot"></span> 3 waiting on you
+          </div>
+        </div>
+      </section>
+
+      <!-- ░░ PROBLEM ░░ -->
+      <section class="band problem" id="problem">
+        <div class="section-head reveal">
+          <span class="kicker"><i class="num-dot"></i> 01 — The problem</span>
+          <h2>Your chats have no inbox.</h2>
+        </div>
+        <div class="problem-grid">
+          <p class="big-quote reveal">
+            So you keep <span class="strike">seventeen tabs</span> open as a memory system —
+            terrified that closing one means forgetting the thread where Claude asked you
+            something and is still waiting.
+          </p>
+          <ul class="pain-list reveal">
+            <li><span class="x">×</span> No way to tell finished chats from open ones</li>
+            <li><span class="x">×</span> The thing waiting on <em>you</em> scrolls out of sight</li>
+            <li><span class="x">×</span> Tabs-as-todo-list breaks the moment you restart</li>
+            <li><span class="x">×</span> None of it follows you to your phone</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ░░ HOW IT WORKS ░░ -->
+      <section class="how" id="how">
+        <div class="section-head reveal">
+          <span class="kicker"><i class="num-dot"></i> 02 — How it works</span>
+          <h2>Three steps. One of them is "do nothing."</h2>
+        </div>
+
+        <div class="steps">
+          <article class="step reveal">
+            <div class="step-n">1</div>
+            <h3>Add one line to your Claude preferences</h3>
+            <p>
+              A one-time paste. It asks Claude to end replies with a tiny 🔴 / ✅ marker.
+              It <strong>appends</strong> to your existing preferences — nothing is overwritten.
+            </p>
+            <div class="code-block">
+              <div class="code-head">
+                <span>preference&nbsp;prompt</span>
+                <button class="copy-btn" type="button" data-copy="prompt">Copy</button>
+              </div>
+              <pre id="prompt"><code>End every substantive reply with exactly one
+status line as the final line:
+
+🔴 Waiting on you: &lt;what you need from me&gt;
+✅ Resolved — safe to archive this chat.
+
+Skip it for trivial exchanges. Never start a
+line with 🔴 or ✅ for any other purpose.</code></pre>
+            </div>
+          </article>
+
+          <article class="step reveal">
+            <div class="step-n">2</div>
+            <h3>Claude tags its own replies</h3>
+            <p>
+              From then on, every meaningful answer ends with a status marker — automatically,
+              everywhere you chat, including the mobile app.
+            </p>
+            <div class="reply-mock">
+              <p>…so I'd go with the mid-range supplier. Want me to draft the email?</p>
+              <p class="marker">🔴 Waiting on you: confirm the supplier choice</p>
+            </div>
+          </article>
+
+          <article class="step reveal">
+            <div class="step-n">3</div>
+            <h3>Your titles get labelled</h3>
+            <p>
+              The extension reads the marker and prefixes the chat title with 🔴 or ✅. It's
+              <strong>exact</strong> — it reads what Claude wrote, it never guesses. Because
+              titles live on the server, the labels show up on your phone too.
+            </p>
+            <div class="rename-mock">
+              <div class="rename-row from"><span class="m"></span> Boiler quote</div>
+              <div class="rename-arrow">↓</div>
+              <div class="rename-row to"><span class="m">🔴</span> Boiler quote</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ░░ FEATURES ░░ -->
+      <section class="band features" id="features">
+        <div class="section-head reveal">
+          <span class="kicker"><i class="num-dot"></i> 03 — What you get</span>
+          <h2>Small surface. Sharp signal.</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature reveal feature-wide">
+            <div class="feature-demo">
+              <div class="mini-pop">
+                <div class="mini-pop-head"><span>Waiting on you</span><span class="mini-count">3</span></div>
+                <ul>
+                  <li>🔴 Boiler quote — supplier reply</li>
+                  <li>🔴 Tax return — figures to confirm</li>
+                  <li>🔴 Mortgage broker follow-up</li>
+                </ul>
+              </div>
+            </div>
+            <div class="feature-text">
+              <h3>A one-click queue</h3>
+              <p>
+                Click the toolbar icon for a tidy list of every chat waiting on you — each a
+                link straight back into the conversation. The badge keeps the count in view.
+              </p>
+            </div>
+          </article>
+
+          <article class="feature reveal">
+            <h3><span class="f-ico">📱</span> Syncs to mobile</h3>
+            <p>
+              Labels are part of the title and stored server-side, so they appear in the
+              claude.ai app automatically. Triage from the sofa.
+            </p>
+          </article>
+
+          <article class="feature reveal">
+            <h3><span class="f-ico">⭐</span> Optional star mirroring</h3>
+            <p>
+              Turn it on and 🔴 chats get starred — so your Starred section becomes a
+              ready-made queue on every device. Off by default; your manual stars stay yours.
+            </p>
+          </article>
+
+          <article class="feature reveal">
+            <h3><span class="f-ico">🎯</span> Exact, never guessed</h3>
+            <p>
+              No fuzzy AI scoring of your chats. It matches the literal marker Claude wrote —
+              deterministic and predictable, every time.
+            </p>
+          </article>
+
+          <article class="feature reveal">
+            <h3><span class="f-ico">⚙️</span> Yours to tune</h3>
+            <p>
+              A simple settings page: master on/off, star mirroring, and how often it
+              re-checks chats finished on other devices.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ░░ PRIVACY CALLOUT (dark) ░░ -->
+      <section class="privacy" id="privacy">
+        <div class="privacy-inner reveal">
+          <span class="kicker light"><i class="num-dot"></i> 04 — Trust</span>
+          <h2>Your chats never leave your browser.</h2>
+          <p class="privacy-lede">
+            There's no server to send anything to. The extension talks only to claude.ai,
+            using the login you already have — exactly like the website does.
+          </p>
+          <ul class="trust-grid">
+            <li><strong>No server.</strong> Nothing is uploaded anywhere. There's nowhere for it to go.</li>
+            <li><strong>No analytics, no telemetry.</strong> You are not measured.</li>
+            <li><strong>Local only.</strong> Settings and a tiny cache stay on your device.</li>
+            <li><strong>Open source.</strong> MIT licensed — read every line before you trust it.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ░░ FAQ ░░ -->
+      <section class="faq" id="faq">
+        <div class="section-head reveal">
+          <span class="kicker"><i class="num-dot"></i> 05 — Questions</span>
+          <h2>The fair things to ask.</h2>
+        </div>
+        <div class="faq-list reveal">
+          <details>
+            <summary>Will it overwrite my existing Claude preferences?</summary>
+            <p>
+              No. You paste the line in yourself, and it <em>appends</em> to whatever you
+              already have. You stay in full control of your own prompt — that's deliberate.
+            </p>
+          </details>
+          <details>
+            <summary>Is my chat data sent anywhere?</summary>
+            <p>
+              No. There's no backend, no analytics, no third parties. The only network
+              requests go to claude.ai, authenticated by your own browser session — the same
+              calls the site already makes.
+            </p>
+          </details>
+          <details>
+            <summary>Does it work on the mobile app?</summary>
+            <p>
+              The labels do. They're part of the chat title, which is stored server-side, so
+              they appear in the app wherever you see your chat list. The extension itself runs
+              on desktop Chrome — it does the labelling; your phone just shows the result.
+            </p>
+          </details>
+          <details>
+            <summary>What if claude.ai changes and it breaks?</summary>
+            <p>
+              It's possible — the extension uses undocumented endpoints. But it's open source,
+              so it can be fixed, and the failure mode is gentle: at worst a label is stale,
+              and you can edit any title back by hand. Nothing destructive.
+            </p>
+          </details>
+          <details>
+            <summary>Is this made by Anthropic?</summary>
+            <p>
+              No. It's an unofficial community tool, not affiliated with or endorsed by
+              Anthropic. Just something built by someone who wanted their chats to have an inbox.
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <!-- ░░ FINAL CTA ░░ -->
+      <section class="final-cta">
+        <div class="reveal">
+          <h2>Give your chats <em>a&nbsp;<span class="live-dot big" aria-hidden="true"></span>&nbsp;</em> and a&nbsp;✅.</h2>
+          <div class="cta-row center">
+            <a class="btn btn-primary" href="#" data-placeholder="GitHub URL TBD">Get it on GitHub</a>
+            <a class="btn btn-ghost" href="#" data-placeholder="Chrome Web Store URL TBD">
+              Chrome Web Store <span class="soon">soon</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ░░ FOOTER ░░ -->
+    <footer class="footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name">Chat&nbsp;Status</span>
+        </div>
+        <nav class="footer-links">
+          <a href="#how">How it works</a>
+          <a href="#features">Features</a>
+          <a href="#faq">FAQ</a>
+          <a href="#" data-placeholder="GitHub URL TBD">GitHub</a>
+          <a href="#" data-placeholder="PRIVACY.md URL TBD">Privacy</a>
+        </nav>
+      </div>
+      <p class="disclaimer">
+        Unofficial community tool. Not affiliated with, endorsed by, or supported by Anthropic.
+        It relies on undocumented claude.ai endpoints that may change at any time.
+        “Claude” is a trademark of Anthropic. · MIT licensed · © 2026
+      </p>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>
