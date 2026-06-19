@@ -2,8 +2,9 @@
    bliptracker — landing page  ·  bliptracker.xyz
    Aesthetic: "Instrument / Scope" — dark phosphor grounds, a radar
    sweep, phosphor-green signal, and a hot contact-red reserved for
-   the "waiting on you" state. Mono carries the voice; Fraunces adds
-   warmth in display; Hanken Grotesk reads long-form.
+   the "waiting on you" state. Chakra Petch (UPPERCASE) is the display
+   face — a squared HUD voice; Hanken Grotesk reads long-form; JetBrains
+   Mono carries readouts/markers.
 
    Two grounds:
      --paper*  = light reading surface (long-form sections stay legible)
@@ -40,7 +41,7 @@
   --scope-line: rgba(47, 214, 166, 0.16);
   --scope-line-strong: rgba(47, 214, 166, 0.34);
 
-  --serif: "Fraunces", Georgia, serif;
+  --serif: "Chakra Petch", system-ui, sans-serif;
   --sans: "Hanken Grotesk", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, monospace;
 
@@ -73,7 +74,7 @@ body {
   overflow-x: hidden;
 }
 
-h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.04; letter-spacing: -0.02em; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.04; letter-spacing: -0.02em; text-transform: uppercase; }
 em { font-style: italic; }
 strong { font-weight: 600; }
 a { color: inherit; }
@@ -132,7 +133,7 @@ a { color: inherit; }
   top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--red);
   box-shadow: 0 0 6px rgba(255, 90, 77, 0.95);
 }
-.brand-name { font-family: var(--serif); font-size: 19px; letter-spacing: -0.01em; }
+.brand-name { font-family: var(--serif); font-size: 18px; font-weight: 700; letter-spacing: 0.04em; }
 .nav-links { display: flex; align-items: center; gap: clamp(14px, 2.5vw, 30px); }
 .nav-links a { text-decoration: none; font-weight: 500; font-size: 15px; color: var(--ink-2); transition: color 0.2s; }
 .nav-links a:hover { color: var(--green-deep); }
@@ -176,7 +177,7 @@ a { color: inherit; }
   text-transform: uppercase; color: var(--green);
   display: inline-flex; align-items: center; gap: 9px; margin-bottom: 22px;
 }
-.hero h1 { font-size: clamp(42px, 6.6vw, 80px); margin-bottom: 24px; color: var(--scope-ink); }
+.hero h1 { font-size: clamp(32px, 5vw, 60px); line-height: 1.06; letter-spacing: 0.005em; margin-bottom: 24px; color: var(--scope-ink); }
 .hero h1 em { color: var(--red); font-style: italic; }
 .hero .lede { color: var(--scope-ink-2); }
 .lede { font-size: clamp(17px, 2vw, 21px); color: var(--ink-2); max-width: 38ch; margin-bottom: 30px; }
@@ -341,7 +342,7 @@ section { padding: clamp(56px, 9vw, 120px) clamp(20px, 5vw, 56px); }
   color: var(--green-deep); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px;
 }
 .kicker.light { color: var(--green); }
-.section-head h2 { font-size: clamp(32px, 4.8vw, 56px); max-width: 17ch; }
+.section-head h2 { font-size: clamp(27px, 3.9vw, 47px); line-height: 1.08; letter-spacing: 0.01em; max-width: 20ch; }
 
 /* ═══ PROBLEM ═══ */
 .problem-grid {
@@ -376,7 +377,7 @@ section { padding: clamp(56px, 9vw, 120px) clamp(20px, 5vw, 56px); }
   box-shadow: 0 0 0 1px rgba(31, 156, 121, 0.3), 0 0 18px -6px rgba(47, 214, 166, 0.8);
 }
 .step-n::after { content: ""; position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 5px rgba(255, 90, 77, 0.9); }
-.step h3 { font-size: 22px; margin-bottom: 10px; }
+.step h3 { font-size: 19px; letter-spacing: 0.03em; margin-bottom: 10px; }
 .step p { font-size: 15.5px; color: var(--ink-2); margin-bottom: 18px; }
 .step p:last-of-type { margin-bottom: 20px; }
 
@@ -430,12 +431,12 @@ section { padding: clamp(56px, 9vw, 120px) clamp(20px, 5vw, 56px); }
   padding: 28px 28px 30px; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s;
 }
 .feature:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--line-strong); }
-.feature h3 { font-size: 21px; margin-bottom: 10px; display: flex; align-items: center; gap: 11px; }
+.feature h3 { font-size: 19px; letter-spacing: 0.03em; margin-bottom: 10px; display: flex; align-items: center; gap: 11px; }
 .feature p { font-size: 15.5px; color: var(--ink-2); }
 .f-ico { font-size: 20px; }
 .feature-wide { grid-column: 1 / -1; display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 32px; align-items: center; }
 @media (max-width: 760px) { .feature-wide { grid-template-columns: 1fr; } }
-.feature-wide h3 { font-size: 26px; }
+.feature-wide h3 { font-size: 23px; }
 
 .mini-pop { background: var(--scope); border: 1px solid var(--scope-line-strong); border-radius: 12px; padding: 14px 14px 16px; box-shadow: var(--shadow-dark-lg); color: var(--scope-ink); }
 .mini-pop-head {
@@ -461,7 +462,7 @@ section { padding: clamp(56px, 9vw, 120px) clamp(20px, 5vw, 56px); }
 }
 .privacy-inner { position: relative; max-width: var(--maxw); margin: 0 auto; }
 .privacy .kicker.light { color: var(--green); }
-.privacy h2 { font-size: clamp(32px, 5vw, 58px); color: var(--scope-ink); max-width: 16ch; margin-bottom: 22px; }
+.privacy h2 { font-size: clamp(29px, 4.4vw, 50px); color: var(--scope-ink); max-width: 18ch; margin-bottom: 22px; }
 .privacy h2::after { content: "."; color: var(--green); }
 .privacy-lede { font-size: clamp(17px, 2vw, 21px); color: var(--scope-ink-2); max-width: 52ch; margin-bottom: 44px; }
 .trust-grid { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--scope-line); border: 1px solid var(--scope-line); border-radius: var(--radius); overflow: hidden; }
@@ -475,7 +476,7 @@ section { padding: clamp(56px, 9vw, 120px) clamp(20px, 5vw, 56px); }
 .faq-list details { border-bottom: 1px solid var(--line); }
 .faq-list details:first-child { border-top: 1px solid var(--line); }
 .faq-list summary {
-  font-family: var(--serif); font-size: clamp(18px, 2.3vw, 23px); font-weight: 500;
+  font-family: var(--serif); font-size: clamp(17px, 2.1vw, 21px); font-weight: 500; letter-spacing: 0.02em;
   padding: 24px 44px 24px 0; cursor: pointer; list-style: none; position: relative; color: var(--ink);
 }
 .faq-list summary::-webkit-details-marker { display: none; }
@@ -494,7 +495,7 @@ section { padding: clamp(56px, 9vw, 120px) clamp(20px, 5vw, 56px); }
     var(--scope);
   border-top: 1px solid var(--scope-line);
 }
-.final-cta h2 { font-size: clamp(34px, 5.5vw, 64px); margin-bottom: 34px; color: var(--scope-ink); }
+.final-cta h2 { font-size: clamp(30px, 4.8vw, 54px); margin-bottom: 34px; color: var(--scope-ink); }
 .final-cta h2 em { font-style: normal; color: var(--red); }
 .final-cta .microcopy { margin-top: 22px; }
 
