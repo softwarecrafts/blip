@@ -1,14 +1,14 @@
-# Blip
+# bliptracker
 
-**Blip is the scope for your AI chats** — a Chrome extension that labels your
+**bliptracker is the scope for your AI chats** — a Chrome extension that labels your
 [claude.ai](https://claude.ai) conversations with a 🔴 / ✅ prefix so you can see
 at a glance which ones are **waiting on you** versus done — on desktop and on
-mobile. `blip.chat`
+mobile. `bliptracker.xyz`
 
 > Unofficial community tool. Not affiliated with or endorsed by Anthropic. It
 > uses undocumented claude.ai endpoints and may break without notice.
 
-![Blip icon](extension/icons/icon128.png)
+![bliptracker icon](extension/icons/icon128.png)
 
 ## How it works
 

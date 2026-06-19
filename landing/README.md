@@ -1,6 +1,6 @@
 # Landing page
 
-Static marketing site for Blip. No build step, no dependencies —
+Static marketing site for bliptracker. No build step, no dependencies —
 just `index.html` + `styles.css` + `main.js` (fonts load from Google Fonts).
 
 ## Preview locally

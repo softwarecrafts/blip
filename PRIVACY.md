@@ -1,8 +1,8 @@
-# Privacy Policy — Blip
+# Privacy Policy — bliptracker
 
 _Last updated: 2026-06-18_
 
-Blip is a browser extension that labels your claude.ai chat
+bliptracker is a browser extension that labels your claude.ai chat
 titles based on status markers in your conversations. This policy explains
 exactly what it touches.
 

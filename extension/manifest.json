@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Blip",
+  "name": "bliptracker",
   "version": "0.1.0",
-  "description": "See which AI chats are waiting on you. Blip marks claude.ai chat titles with 🔴/✅ from the status markers Claude leaves in its replies.",
+  "description": "See which AI chats are waiting on you. bliptracker marks claude.ai chat titles with 🔴/✅ from the status markers Claude leaves in its replies.",
   "background": { "service_worker": "background.js", "type": "module" },
   "permissions": ["alarms", "storage"],
   "host_permissions": ["https://claude.ai/*"],
@@ -16,7 +16,7 @@
   "options_ui": { "page": "options.html", "open_in_tab": true },
   "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
   "action": {
-    "default_title": "Blip — chats waiting on you",
+    "default_title": "bliptracker — chats waiting on you",
     "default_popup": "popup.html",
     "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
   }
