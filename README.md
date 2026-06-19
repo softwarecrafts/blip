@@ -75,13 +75,9 @@ All under `/api/organizations/{orgId}`:
 
 ## Roadmap
 
-- [x] Recon, core poller, idempotent rename, star mirroring
-- [x] Instant active-chat updates (content script)
-- [x] Settings page, onboarding page, popup queue, icons
-- [ ] One-click preference injection (needs settings-write endpoint recon +
-      append-not-replace + consent screen)
-- [ ] Chrome Web Store listing assets (screenshots, promo tile)
-- [ ] Optional: bulk-archive ✅ chats
+See [ROADMAP.md](ROADMAP.md) for shipped features, what's next, and planned
+future work (e.g. a popup "Resolve" button, one-click preference injection,
+bulk-archive, and multi-AI adapters).
 
 ## Development
 
