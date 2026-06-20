@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>bliptracker — Chrome Web Store screenshots</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../landing/styles.css" />
+    <style>
+      /* Hide the page scrollbar so it never bleeds into a tile capture. */
+      html { scrollbar-width: none; }
+      html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+      /* ── Screenshot scaffold (this file only — does not touch the brand sheet) ── */
+      body {
+        background: #060f0e;
+        background-image: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+        padding: 40px;
+        overflow-x: auto;
+      }
+
+      .shot {
+        width: 1280px;
+        height: 800px;
+        overflow: hidden;
+        position: relative;
+        flex: none;
+        color: var(--scope-ink);
+        font-family: var(--sans);
+        /* Dark scope ground — the signature instrument surface */
+        background:
+          radial-gradient(900px 620px at 80% -12%, rgba(47, 214, 166, 0.13), transparent 60%),
+          radial-gradient(720px 520px at -4% 8%, rgba(255, 90, 77, 0.07), transparent 55%),
+          var(--scope);
+        border: 1px solid var(--scope-line-strong);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-dark-lg);
+      }
+      /* faint radar grid overlay on every tile */
+      .shot::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(47, 214, 166, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(47, 214, 166, 0.045) 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+
+      .shot-inner {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        padding: 72px 80px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ── Brand lockup (consistent top-left corner on every tile) ── */
+      .lockup {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        position: absolute;
+        top: 44px;
+        left: 80px;
+        z-index: 3;
+      }
+      .lockup .brand-mark {
+        width: 30px;
+        height: 30px;
+      }
+      .lockup .brand-name {
+        font-family: var(--serif);
+        font-size: 21px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--scope-ink);
+        text-transform: uppercase;
+      }
+
+      /* ── Caption / headline ── */
+      .shot-cap {
+        font-family: var(--serif);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.012em;
+        line-height: 1.05;
+        color: var(--scope-ink);
+      }
+      .shot-eyebrow {
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--green);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+      .shot-eyebrow .live-dot { width: 10px; height: 10px; }
+
+      .shot-body {
+        flex: 1;
+        display: grid;
+        align-items: center;
+        min-height: 0;
+      }
+
+      /* ════ TILE 1 — value / labelled chat list ════ */
+      #shot-1 .shot-inner { padding-top: 108px; }
+      #shot-1 .shot-body {
+        grid-template-columns: 1fr 1fr;
+        gap: 64px;
+      }
+      #shot-1 .t1-copy h2 {
+        font-family: var(--serif);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 52px;
+        line-height: 1.04;
+        letter-spacing: 0.01em;
+        color: var(--scope-ink);
+      }
+      #shot-1 .t1-copy h2 em { color: var(--red); font-style: italic; }
+      #shot-1 .t1-copy p {
+        margin-top: 26px;
+        font-size: 19px;
+        line-height: 1.55;
+        color: var(--scope-ink-2);
+        max-width: 30ch;
+      }
+      #shot-1 .t1-chips { margin-top: 26px; display: flex; gap: 12px; }
+      #shot-1 .t1-chips .chip { font-size: 14px; padding: 4px 13px; }
+
+      /* faux chat-list window (own clean styling) */
+      .chatwin {
+        background: var(--scope-2);
+        border: 1px solid var(--scope-line-strong);
+        border-radius: 18px;
+        box-shadow: var(--shadow-dark-lg);
+        overflow: hidden;
+      }
+      .chatwin-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 15px 18px;
+        background: var(--scope-3);
+        border-bottom: 1px solid var(--scope-line);
+      }
+      .chatwin-bar .dot { width: 12px; height: 12px; border-radius: 50%; }
+      .chatwin-bar .dot.r { background: var(--red); }
+      .chatwin-bar .dot.y { background: #e3b341; }
+      .chatwin-bar .dot.g { background: var(--green); }
+      .chatwin-bar .ttl {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--scope-ink-soft);
+        margin-left: 12px;
+      }
+      .chatwin-list { padding: 14px 14px 18px; list-style: none; }
+      .chatwin-head {
+        font-family: var(--mono);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--scope-ink-soft);
+        padding: 4px 12px 12px;
+      }
+      .chatrow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 14px;
+        border-radius: 11px;
+        font-size: 16px;
+        color: var(--scope-ink-2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .chatrow .m { width: 20px; flex: none; font-size: 15px; }
+      .chatrow.waiting {
+        background: rgba(255, 90, 77, 0.12);
+        color: var(--scope-ink);
+        font-weight: 500;
+        box-shadow: inset 3px 0 0 var(--red);
+      }
+      .chatrow.done { color: var(--scope-ink-soft); }
+      .chatrow.done .m { color: var(--green); }
+
+      /* ════ TILE 2 — the queue popup ════ */
+      #shot-2 .shot-inner { padding-top: 100px; }
+      #shot-2 .shot-body {
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+      }
+      #shot-2 .t2-copy h2 {
+        font-family: var(--serif);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 48px;
+        line-height: 1.05;
+        letter-spacing: 0.01em;
+        color: var(--scope-ink);
+      }
+      #shot-2 .t2-copy h2 .live-dot { width: 0.55em; height: 0.55em; }
+      #shot-2 .t2-copy p {
+        margin-top: 24px;
+        font-size: 18px;
+        line-height: 1.55;
+        color: var(--scope-ink-2);
+        max-width: 32ch;
+      }
+
+      /* browser toolbar hint above the popup */
+      .t2-stage { position: relative; justify-self: center; width: 100%; max-width: 440px; }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: var(--scope-3);
+        border: 1px solid var(--scope-line);
+        border-bottom: none;
+        border-radius: 14px 14px 0 0;
+        padding: 12px 16px;
+        margin: 0 18px;
+      }
+      .toolbar .url {
+        flex: 1;
+        height: 26px;
+        border-radius: 100px;
+        background: rgba(8, 24, 21, 0.65);
+        border: 1px solid var(--scope-line);
+      }
+      .toolbar .ext-ico {
+        position: relative;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: var(--scope-2);
+        border: 1px solid var(--line-strong);
+        box-shadow: inset 0 0 0 4px rgba(47, 214, 166, 0.13), inset 0 0 0 8px rgba(47, 214, 166, 0.07);
+        flex: none;
+      }
+      .toolbar .ext-ico::after {
+        content: "";
+        position: absolute;
+        top: 6px; right: 6px;
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: var(--red);
+        box-shadow: 0 0 6px rgba(255, 90, 77, 0.9);
+      }
+      .toolbar .ext-badge {
+        position: absolute;
+        top: -7px; right: -7px;
+        min-width: 18px; height: 18px;
+        padding: 0 4px;
+        border-radius: 100px;
+        background: var(--red);
+        color: #fff;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 0 8px rgba(255, 90, 77, 0.6);
+      }
+      /* enlarged popup, styled like .mini-pop */
+      .pop {
+        background: var(--scope);
+        border: 1px solid var(--scope-line-strong);
+        border-radius: 16px;
+        padding: 22px 22px 24px;
+        box-shadow: var(--shadow-dark-lg);
+        color: var(--scope-ink);
+        position: relative;
+      }
+      .pop-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: var(--serif);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 20px;
+        padding-bottom: 16px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--scope-line);
+      }
+      .pop-count {
+        font-family: var(--mono);
+        background: var(--red);
+        color: #fff;
+        border-radius: 100px;
+        padding: 2px 13px;
+        font-size: 15px;
+        font-weight: 700;
+        box-shadow: 0 0 10px rgba(255, 90, 77, 0.55);
+      }
+      .pop ul { list-style: none; }
+      .pop li {
+        font-family: var(--mono);
+        font-size: 15px;
+        padding: 14px 12px;
+        border-radius: 9px;
+        color: var(--scope-ink);
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background: rgba(255, 90, 77, 0.08);
+        margin-bottom: 9px;
+      }
+      .pop li:last-child { margin-bottom: 0; }
+      .pop li .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--red); flex: none; box-shadow: 0 0 6px rgba(255, 90, 77, 0.7); }
+      .pop-foot {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--scope-ink-soft);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--scope-line);
+        text-align: center;
+      }
+
+      /* ════ TILE 3 — one-time setup ════ */
+      #shot-3 .shot-inner { padding-top: 104px; }
+      #shot-3 .shot-body { grid-template-columns: 0.85fr 1.15fr; gap: 60px; }
+      #shot-3 .t3-copy h2 {
+        font-family: var(--serif);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 46px;
+        line-height: 1.05;
+        letter-spacing: 0.01em;
+        color: var(--scope-ink);
+      }
+      #shot-3 .t3-copy p {
+        margin-top: 24px;
+        font-size: 18px;
+        line-height: 1.55;
+        color: var(--scope-ink-2);
+        max-width: 26ch;
+      }
+      #shot-3 .t3-step {
+        margin-top: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-family: var(--mono);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--scope-ink-soft);
+      }
+      #shot-3 .t3-step b {
+        font-family: var(--serif);
+        color: #06201a;
+        background: var(--green);
+        width: 34px; height: 34px;
+        border-radius: 50%;
+        display: grid; place-items: center;
+        font-size: 16px;
+        box-shadow: 0 0 0 1px rgba(47, 214, 166, 0.3), 0 0 16px -4px rgba(47, 214, 166, 0.8);
+      }
+      /* reuse .code-block look at a larger scale */
+      #shot-3 .code-block {
+        margin: 0;
+        border-radius: 14px;
+        background: rgba(6, 16, 14, 0.85);
+      }
+      #shot-3 .code-head {
+        padding: 13px 18px;
+        font-size: 13px;
+      }
+      #shot-3 .code-block pre { padding: 22px 22px; }
+      #shot-3 .code-block code {
+        font-size: 16px;
+        line-height: 1.85;
+        color: var(--scope-ink-2);
+      }
+      #shot-3 .code-block code .hl-r { color: var(--red); }
+      #shot-3 .code-block code .hl-g { color: var(--green); }
+      #shot-3 .t3-note {
+        font-family: var(--mono);
+        font-size: 13.5px;
+        color: var(--scope-ink-soft);
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      #shot-3 .t3-note::before {
+        content: "✓";
+        color: var(--green);
+        font-weight: 700;
+      }
+
+      /* ════ TILE 4 — trust / private ════ */
+      #shot-4 .shot-inner { padding-top: 96px; padding-bottom: 96px; }
+      #shot-4 .shot-body { grid-template-columns: 1fr; grid-template-rows: auto auto; align-content: center; gap: 40px; }
+      #shot-4 .t4-cap h2 {
+        font-family: var(--serif);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 46px;
+        letter-spacing: 0.01em;
+        color: var(--scope-ink);
+      }
+      #shot-4 .t4-cap h2::after { content: "."; color: var(--green); }
+      #shot-4 .t4-cap p {
+        margin-top: 18px;
+        font-size: 18px;
+        color: var(--scope-ink-2);
+        max-width: 62ch;
+        line-height: 1.5;
+      }
+      .trust4 {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1px;
+        background: var(--scope-line);
+        border: 1px solid var(--scope-line);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .trust4 li {
+        background: var(--scope-2);
+        padding: 24px 30px;
+        font-size: 17px;
+        color: var(--scope-ink-2);
+        line-height: 1.5;
+      }
+      .trust4 strong {
+        font-family: var(--serif);
+        font-size: 21px;
+        font-weight: 600;
+        color: var(--scope-ink);
+        display: block;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+      }
+      .trust4 strong::before {
+        content: "●";
+        color: var(--green);
+        font-size: 11px;
+        vertical-align: middle;
+        margin-right: 12px;
+      }
+      #shot-4 .t4-foot {
+        position: absolute;
+        bottom: 40px;
+        left: 80px;
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        color: var(--scope-ink-soft);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ════════ TILE 1 — VALUE / LABELLED CHAT LIST ════════ -->
+    <section class="shot" id="shot-1">
+      <span class="lockup">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">bliptracker</span>
+      </span>
+      <div class="shot-inner">
+        <div class="shot-body">
+          <div class="t1-copy">
+            <p class="shot-eyebrow"><span class="live-dot" aria-hidden="true"></span> Scope online</p>
+            <h2>Know which chats are <em>waiting on you.</em></h2>
+            <p>bliptracker sweeps your AI chat list and puts a marker on every title — so the blip still needing a reply never scrolls off the scope.</p>
+            <div class="t1-chips">
+              <span class="chip chip-red">🔴 active</span>
+              <span class="chip chip-green">✅ cleared</span>
+            </div>
+          </div>
+
+          <div class="chatwin">
+            <div class="chatwin-bar">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="ttl">your chats</span>
+            </div>
+            <ul class="chatwin-list">
+              <li class="chatwin-head">Recent</li>
+              <li class="chatrow waiting"><span class="m">🔴</span> Boiler quote — supplier reply</li>
+              <li class="chatrow done"><span class="m">✅</span> Holiday itinerary</li>
+              <li class="chatrow waiting"><span class="m">🔴</span> Tax return — figures to confirm</li>
+              <li class="chatrow"><span class="m"></span> Recipe ideas for Friday</li>
+              <li class="chatrow done"><span class="m">✅</span> Django migration plan</li>
+              <li class="chatrow waiting"><span class="m">🔴</span> Mortgage broker follow-up</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ TILE 2 — THE QUEUE POPUP ════════ -->
+    <section class="shot" id="shot-2">
+      <span class="lockup">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">bliptracker</span>
+      </span>
+      <div class="shot-inner">
+        <div class="shot-body">
+          <div class="t2-copy">
+            <p class="shot-eyebrow"><span class="live-dot" aria-hidden="true"></span> One click away</p>
+            <h2>Your "waiting on you" queue, one click away.</h2>
+            <p>Click the toolbar icon for a tidy list of every chat still waiting on you — each a link straight back into the conversation. The badge keeps the active count in view.</p>
+          </div>
+
+          <div class="t2-stage">
+            <div class="toolbar">
+              <span class="url"></span>
+              <span class="ext-ico"><span class="ext-badge">3</span></span>
+            </div>
+            <div class="pop">
+              <div class="pop-head">
+                <span>Waiting on you</span>
+                <span class="pop-count">3</span>
+              </div>
+              <ul>
+                <li><span class="dot"></span> Boiler quote</li>
+                <li><span class="dot"></span> Tax return</li>
+                <li><span class="dot"></span> Mortgage broker follow-up</li>
+              </ul>
+              <div class="pop-foot">Each blip links straight back into the chat</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ TILE 3 — ONE-TIME SETUP ════════ -->
+    <section class="shot" id="shot-3">
+      <span class="lockup">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">bliptracker</span>
+      </span>
+      <div class="shot-inner">
+        <div class="shot-body">
+          <div class="t3-copy">
+            <p class="shot-eyebrow"><span class="live-dot" aria-hidden="true"></span> Signal chain</p>
+            <h2>One-time setup — then it's automatic.</h2>
+            <p>Paste one line into your AI preferences. From then on, every meaningful reply transmits its own status.</p>
+            <span class="t3-step"><b>1</b> Teach the chat to transmit</span>
+          </div>
+
+          <div>
+            <div class="code-block">
+              <div class="code-head">
+                <span>preference&nbsp;prompt</span>
+                <button class="copy-btn" type="button">Copy</button>
+              </div>
+              <pre><code>End every substantive reply with exactly one
+status line:
+
+<span class="hl-r">🔴 Waiting on you: &lt;what you need from me&gt;</span>
+<span class="hl-g">✅ Resolved — safe to archive this chat.</span></code></pre>
+            </div>
+            <p class="t3-note">Appends to your existing preferences — nothing is overwritten.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
