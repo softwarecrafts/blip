@@ -475,6 +475,37 @@
         letter-spacing: 0.04em;
         color: var(--scope-ink-soft);
       }
+      /* ── 440×280 Web Store promo tile ── */
+      .promo {
+        width: 440px; height: 280px; overflow: hidden; position: relative;
+        display: flex; flex-direction: column; justify-content: center;
+        padding: 34px 38px;
+        background:
+          radial-gradient(420px 320px at 82% -25%, rgba(47, 214, 166, 0.18), transparent 60%),
+          var(--scope);
+        color: var(--scope-ink);
+      }
+      .promo::before {
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background-image:
+          linear-gradient(rgba(47, 214, 166, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(47, 214, 166, 0.05) 1px, transparent 1px);
+        background-size: 26px 26px;
+      }
+      .promo .lockup { position: static; margin-bottom: 16px; }
+      .promo .lockup .brand-mark { width: 30px; height: 30px; }
+      .promo .lockup .brand-name { font-size: 22px; }
+      .promo h2 {
+        position: relative; z-index: 1;
+        font-family: var(--serif); text-transform: uppercase; font-weight: 600;
+        font-size: 31px; line-height: 1.06; letter-spacing: 0.005em; color: var(--scope-ink);
+      }
+      .promo h2 em { color: var(--red); font-style: italic; }
+      .promo .psub {
+        position: relative; z-index: 1; margin-top: 16px;
+        font-family: var(--mono); font-size: 12px; text-transform: uppercase;
+        letter-spacing: 0.05em; color: var(--green);
+      }
     </style>
   </head>
   <body>
@@ -582,6 +613,16 @@ status line:
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- ════════ 440×280 PROMO TILE ════════ -->
+    <section class="promo" id="promo">
+      <span class="lockup">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">bliptracker</span>
+      </span>
+      <h2>Which chats are <em>waiting on you.</em></h2>
+      <p class="psub">🔴 waiting · ✅ done — on every chat title</p>
     </section>
   </body>
 </html>
