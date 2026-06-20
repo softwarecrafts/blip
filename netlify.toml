@@ -1,0 +1,14 @@
+# Netlify configuration for the bliptracker landing page.
+# The site is a static page in landing/ — there is no build step.
+
+[build]
+  publish = "landing"
+  # no build command: the files are served as-is
+
+# Security headers (harmless for a static marketing page, good hygiene).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
