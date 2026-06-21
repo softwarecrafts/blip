@@ -1,14 +1,47 @@
 # bliptracker
 
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/dhbhcgiohdpemjhlcmldipoioafeeemj?label=Chrome%20Web%20Store&color=2fd6a6)](https://chromewebstore.google.com/detail/bliptracker/dhbhcgiohdpemjhlcmldipoioafeeemj)
+[![users](https://img.shields.io/chrome-web-store/users/dhbhcgiohdpemjhlcmldipoioafeeemj?color=2fd6a6)](https://chromewebstore.google.com/detail/bliptracker/dhbhcgiohdpemjhlcmldipoioafeeemj)
+[![rating](https://img.shields.io/chrome-web-store/rating/dhbhcgiohdpemjhlcmldipoioafeeemj?color=2fd6a6)](https://chromewebstore.google.com/detail/bliptracker/dhbhcgiohdpemjhlcmldipoioafeeemj)
+[![license: MIT](https://img.shields.io/badge/license-MIT-3fb950)](LICENSE)
+
 **bliptracker is the scope for your AI chats** — a Chrome extension that labels your
-[claude.ai](https://claude.ai) conversations with a 🔴 / ✅ prefix so you can see
-at a glance which ones are **waiting on you** versus done — on desktop and on
-mobile. `bliptracker.xyz`
+[claude.ai](https://claude.ai) conversations with a 🔴 / ✅ prefix so you can see at a
+glance which ones are **waiting on you** versus done — on desktop and on mobile.
+→ [**bliptracker.xyz**](https://bliptracker.xyz)
 
-> Unofficial community tool. Not affiliated with or endorsed by Anthropic. It
-> uses undocumented claude.ai endpoints and may break without notice.
+> ⚠️ Unofficial community tool. Not affiliated with or endorsed by Anthropic. It uses
+> undocumented claude.ai endpoints and may break without notice.
 
-![bliptracker icon](extension/icons/icon128.png)
+[![bliptracker — know which AI chats are waiting on you](landing/og.png)](https://bliptracker.xyz)
+
+## Install
+
+**[➕ Add to Chrome](https://chromewebstore.google.com/detail/bliptracker/dhbhcgiohdpemjhlcmldipoioafeeemj)** — the easy way.
+
+<details>
+<summary>Or load from source (unpacked)</summary>
+
+1. Clone or download this repo.
+2. Go to `chrome://extensions` → enable **Developer mode** → **Load unpacked** →
+   select the `extension/` folder.
+3. A setup tab opens automatically — copy the preference prompt into your Claude
+   profile settings (it links you straight there).
+</details>
+
+After installing, do the one-time setup (below) and you're done.
+
+## Demo
+
+<!-- TODO: once recorded, replace this block with: ![bliptracker demo](marketing/demo.gif) -->
+▶️ A short walkthrough GIF is coming. Recording spec:
+[marketing/demo-gif-spec.md](marketing/demo-gif-spec.md).
+
+## Screenshots
+
+| Waiting-on-you, labelled | The queue popup | One-time setup |
+| --- | --- | --- |
+| ![Labelled chat list](store-assets/screenshots/shot-1-value.png) | ![Waiting-on-you queue](store-assets/screenshots/shot-2-queue.png) | ![One-time setup](store-assets/screenshots/shot-3-setup.png) |
 
 ## How it works
 
@@ -24,15 +57,6 @@ mobile. `bliptracker.xyz`
 
 Classification is deterministic — a string match on the marker Claude wrote,
 never an after-the-fact guess.
-
-## Install (unpacked)
-
-1. `chrome://extensions` → enable **Developer mode** → **Load unpacked** →
-   select the `extension/` folder.
-2. A setup tab opens automatically. Copy the preference prompt into your Claude
-   profile settings (it links you straight there).
-3. Done. New markers get picked up instantly in the chat you're viewing, and a
-   background sweep (default every 10 min) catches chats finished on mobile.
 
 ## Settings
 
@@ -87,6 +111,12 @@ Pure JS, no build step. Logic in `extension/lib/` (`classify.js`,
 ```sh
 node --input-type=module -e "import {classify} from './extension/lib/classify.js'; console.log(classify('x\n✅ Resolved — safe to archive this chat.'))"
 ```
+
+## Feedback & contributing
+
+Found a bug, or got an idea? **[Open an issue](https://github.com/softwarecrafts/blip/issues)** —
+feedback on the onboarding especially welcome. PRs are warmly received; it's a
+small, no-build codebase, so jump straight in.
 
 ## License
 

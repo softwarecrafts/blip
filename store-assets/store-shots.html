@@ -506,6 +506,50 @@
         font-family: var(--mono); font-size: 12px; text-transform: uppercase;
         letter-spacing: 0.05em; color: var(--green);
       }
+      /* ── 1200×630 social / OG card ── */
+      .og {
+        width: 1200px; height: 630px; overflow: hidden; position: relative;
+        display: grid; grid-template-columns: 1.05fr 0.95fr; align-items: center; gap: 56px;
+        padding: 72px 80px;
+        background:
+          radial-gradient(900px 700px at 86% -20%, rgba(47, 214, 166, 0.16), transparent 60%),
+          radial-gradient(700px 520px at -5% 115%, rgba(255, 90, 77, 0.07), transparent 55%),
+          var(--scope);
+        color: var(--scope-ink);
+      }
+      .og::before {
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background-image:
+          linear-gradient(rgba(47, 214, 166, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(47, 214, 166, 0.045) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+      .og .ogcopy { position: relative; z-index: 1; }
+      .og .lockup { position: static; margin-bottom: 26px; }
+      .og .lockup .brand-mark { width: 38px; height: 38px; }
+      .og .lockup .brand-name { font-size: 30px; }
+      .og h2 {
+        font-family: var(--serif); text-transform: uppercase; font-weight: 600;
+        font-size: 58px; line-height: 1.04; letter-spacing: 0.005em; color: var(--scope-ink);
+      }
+      .og h2 em { color: var(--red); font-style: italic; }
+      .og .ogsub {
+        margin-top: 24px; font-family: var(--mono); font-size: 16px;
+        text-transform: uppercase; letter-spacing: 0.04em; color: var(--green);
+      }
+      .og-list {
+        position: relative; z-index: 1;
+        background: var(--scope-2); border: 1px solid var(--scope-line);
+        border-radius: 18px; padding: 16px; box-shadow: var(--shadow-dark-lg);
+      }
+      .og-list .row {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 16px; border-radius: 10px;
+        font-family: var(--mono); font-size: 17px; color: var(--scope-ink-2);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .og-list .row.r { background: rgba(255, 90, 77, 0.10); color: var(--scope-ink); }
+      .og-list .row .m { width: 22px; flex: none; }
     </style>
   </head>
   <body>
@@ -623,6 +667,25 @@ status line:
       </span>
       <h2>Which chats are <em>waiting on you.</em></h2>
       <p class="psub">🔴 waiting · ✅ done — on every chat title</p>
+    </section>
+
+    <!-- ════════ 1200×630 SOCIAL / OG CARD ════════ -->
+    <section class="og" id="og">
+      <div class="ogcopy">
+        <span class="lockup">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name">bliptracker</span>
+        </span>
+        <h2>Know which AI chats are <em>waiting on you.</em></h2>
+        <p class="ogsub">🔴 waiting · ✅ done — on every chat title · bliptracker.xyz</p>
+      </div>
+      <div class="og-list">
+        <div class="row r"><span class="m">🔴</span> Boiler quote — supplier reply</div>
+        <div class="row"><span class="m">✅</span> Holiday itinerary</div>
+        <div class="row r"><span class="m">🔴</span> Tax return — figures to confirm</div>
+        <div class="row"><span class="m"></span> Recipe ideas for Friday</div>
+        <div class="row r"><span class="m">🔴</span> Mortgage broker follow-up</div>
+      </div>
     </section>
   </body>
 </html>
