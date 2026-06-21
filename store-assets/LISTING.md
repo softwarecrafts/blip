@@ -19,39 +19,39 @@ Productivity
 
 ## Detailed description
 
-> **Know which Claude conversations need you.**
->
-> claude.ai gives you one long, flat list of chats with no sense of which ones
-> are finished and which are still waiting on your reply. bliptracker
-> fixes that.
->
-> It adds a 🔴 prefix to chats where the ball is in your court, and a ✅ prefix
-> to ones that are done — right in the chat title, so the labels show up on the
-> mobile app too. Click the toolbar icon for a tidy "waiting on you" list you
-> can jump straight into.
->
-> **How it works**
-> 1. A one-time setup adds a short instruction to your Claude profile so Claude
->    ends replies with a small 🔴 / ✅ status marker. (The extension walks you
->    through it on install — it appends to your existing preferences, nothing is
->    overwritten.)
-> 2. The extension reads that marker and labels the chat title accordingly.
->
-> That's it. Labelling is exact — it reads the marker Claude wrote, it does not
-> guess.
->
-> **Private by design**
-> There's no server and no analytics. The extension talks only to claude.ai,
-> using your existing login, exactly like the website does. Nothing is sent
-> anywhere else. Your settings and a small change-tracking cache stay on your
-> device.
->
-> **Optional extras**
-> • Mirror status to stars, so your Starred section becomes your mobile queue.
-> • Adjustable background re-check interval.
->
-> Unofficial community tool. Not affiliated with or endorsed by Anthropic. It
-> relies on undocumented claude.ai endpoints and may break if those change.
+ **Know which Claude conversations need you.**
+
+ claude.ai gives you one long, flat list of chats with no sense of which ones
+ are finished and which are still waiting on your reply. bliptracker
+ fixes that.
+
+ It adds a 🔴 prefix to chats where the ball is in your court, and a ✅ prefix
+ to ones that are done — right in the chat title, so the labels show up on the
+ mobile app too. Click the toolbar icon for a tidy "waiting on you" list you
+ can jump straight into.
+
+ **How it works**
+ 1. A one-time setup adds a short instruction to your Claude profile so Claude
+    ends replies with a small 🔴 / ✅ status marker. (The extension walks you
+    through it on install — it appends to your existing preferences, nothing is
+    overwritten.)
+ 2. The extension reads that marker and labels the chat title accordingly.
+
+ That's it. Labelling is exact — it reads the marker Claude wrote, it does not
+ guess.
+
+ **Private by design**
+ There's no server and no analytics. The extension talks only to claude.ai,
+ using your existing login, exactly like the website does. Nothing is sent
+ anywhere else. Your settings and a small change-tracking cache stay on your
+ device.
+
+ **Optional extras**
+ • Mirror status to stars, so your Starred section becomes your mobile queue.
+ • Adjustable background re-check interval.
+
+ Unofficial community tool. Not affiliated with or endorsed by Anthropic. It
+ relies on undocumented claude.ai endpoints and may break if those change.
 
 ## Permission justifications (dashboard requires one per permission)
 
@@ -78,23 +78,32 @@ Productivity
 
 ## Image assets needed (capture from a real browser)
 
-| Asset | Size | Shot |
-| --- | --- | --- |
-| Screenshot 1 | 1280×800 | claude.ai sidebar showing 🔴 / ✅ prefixed chat titles |
-| Screenshot 2 | 1280×800 | The extension popup — "Waiting on you" list with a few chats |
-| Screenshot 3 | 1280×800 | The onboarding/setup page (copy-prompt step) |
-| Screenshot 4 | 1280×800 | The options page |
-| Small promo tile | 440×280 | Icon + tagline "Know which chats are waiting on you" |
-| Store icon | 128×128 | `extension/icons/icon128.png` (already have it) |
+Built tiles live in `store-assets/screenshots/` (1280×800, rendered from
+`store-assets/store-shots.html`):
 
-Tips: use a clean Claude account/theme for screenshots; blur any private chat
-titles; 1280×800 is preferred over 640×400.
+| Asset | File | Shot |
+| --- | --- | --- |
+| Screenshot 1 | `shot-1-value.png` | Value + labelled chat list (🔴 / ✅) |
+| Screenshot 2 | `shot-2-queue.png` | The "waiting on you" queue popup |
+| Screenshot 3 | `shot-3-setup.png` | One-time setup (preference prompt) |
+| Screenshot 4 | `shot-4-privacy.png` | Private by design |
+| Store icon | 128×128 | `extension/icons/icon128.png` (have it) |
+
+Still to make:
+- **Small promo tile** 440×280 — icon + tagline (can add a 5th frame to
+  `store-shots.html`).
+- _(optional)_ a genuine in-product shot of your real claude.ai sidebar with
+  🔴 / ✅ titles, captured from your own browser, to swap in as authenticity.
+
+To regenerate: serve the repo root (`python3 -m http.server` from the project
+folder) and screenshot each `#shot-N` in `/store-assets/store-shots.html`.
 
 ## Pre-submit checklist
 
-- [ ] Privacy policy reachable at a public URL
-- [ ] All 4 permission justifications entered
-- [ ] Single-purpose statement entered
-- [ ] At least one 1280×800 screenshot
-- [ ] $5 developer account registered
-- [ ] `extension/` zipped (exclude repo files — zip the folder contents only)
+- [x] Privacy policy reachable at a public URL
+- [x] All 4 permission justifications entered
+- [x] Single-purpose statement entered
+- [x] 1280×800 screenshots (4, in `store-assets/screenshots/`)
+- [x] 440×280 promo tile
+- [x] $5 developer account registered
+- [x] `extension/` zipped (exclude repo files — zip the folder contents only)
