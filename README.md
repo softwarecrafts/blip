@@ -54,6 +54,12 @@ After installing, do the one-time setup (below) and you're done.
    claude.ai mobile app** automatically — you only run the extension on desktop.
 3. Click the toolbar icon for a **“waiting on you” queue** of your 🔴 chats; the
    badge shows the count.
+4. Not ready to deal with a chat yet? **Snooze it** from the popup (1 hour,
+   tomorrow 9am, 3 days, 1 week, or a custom time). It leaves the queue and the
+   badge, its title becomes `💤🔴 …` (synced to mobile like any label), and it
+   sits in a collapsed **Snoozed** section until it wakes — automatically, via a
+   one-shot alarm, even between sweeps. Wake times live in local extension
+   storage, so snooze schedules are per-machine.
 
 Classification is deterministic — a string match on the marker Claude wrote,
 never an after-the-fact guess.

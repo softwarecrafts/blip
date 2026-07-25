@@ -19,8 +19,10 @@
       h1 { font-size: 13px; font-weight: 600; margin: 0; }
       #count { opacity: 0.6; font-variant-numeric: tabular-nums; }
       ul { list-style: none; margin: 0; padding: 0; }
-      li { margin: 0 0 2px; }
+      li { margin: 0 0 2px; display: flex; align-items: center; gap: 4px; }
       a.chat {
+        flex: 1;
+        min-width: 0;
         display: block;
         padding: 7px 8px;
         border-radius: 6px;
@@ -31,7 +33,72 @@
         text-overflow: ellipsis;
       }
       a.chat:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+      .row-btn {
+        font: inherit;
+        background: none;
+        border: none;
+        color: inherit;
+        opacity: 0.45;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        line-height: 1;
+      }
+      .row-btn:hover { opacity: 1; background: color-mix(in srgb, currentColor 10%, transparent); }
+      /* Inline snooze panel, moved beneath the row it was opened from. */
+      #snooze-panel[hidden] { display: none; } /* display:flex would beat the hidden attr */
+      #snooze-panel {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 6px 8px 8px;
+        margin: 0 0 4px;
+      }
+      #snooze-panel button.preset {
+        font: inherit;
+        font-size: 12px;
+        color: inherit;
+        background: color-mix(in srgb, currentColor 8%, transparent);
+        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        border-radius: 999px;
+        padding: 3px 9px;
+        cursor: pointer;
+      }
+      #snooze-panel button.preset:hover { background: color-mix(in srgb, currentColor 16%, transparent); }
+      .custom-row { display: flex; gap: 4px; width: 100%; margin-top: 2px; }
+      #snooze-custom {
+        flex: 1;
+        font: inherit;
+        font-size: 12px;
+        color: inherit;
+        background: none;
+        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+      #snooze-custom.invalid { border-color: #e23f33; outline: 1px solid #e23f33; }
+      #snooze-set {
+        font: inherit;
+        font-size: 12px;
+        color: inherit;
+        background: color-mix(in srgb, currentColor 8%, transparent);
+        border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+        border-radius: 6px;
+        padding: 2px 9px;
+        cursor: pointer;
+      }
+      #snooze-set:hover { background: color-mix(in srgb, currentColor 16%, transparent); }
       .empty { opacity: 0.6; padding: 8px 0; }
+      details#snoozed {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+      }
+      details#snoozed summary { cursor: pointer; opacity: 0.7; }
+      details#snoozed summary:hover { opacity: 1; }
+      details#snoozed ul { margin-top: 6px; }
+      #snoozed-list a.chat { opacity: 0.7; }
+      .wake { font-size: 11px; opacity: 0.6; white-space: nowrap; }
       footer {
         display: flex;
         justify-content: space-between;
@@ -60,6 +127,17 @@
     </header>
     <ul id="list"></ul>
     <div id="empty" class="empty" hidden>Nothing waiting. 🎉</div>
+    <div id="snooze-panel" hidden>
+      <!-- preset buttons injected by popup.js -->
+      <div class="custom-row">
+        <input id="snooze-custom" type="datetime-local" />
+        <button id="snooze-set">Set</button>
+      </div>
+    </div>
+    <details id="snoozed" hidden>
+      <summary>Snoozed <span id="snoozed-count"></span></summary>
+      <ul id="snoozed-list"></ul>
+    </details>
     <footer>
       <button id="refresh">↻ Refresh</button>
       <a class="link" id="options" href="#">Settings</a>

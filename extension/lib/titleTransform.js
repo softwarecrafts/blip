@@ -11,7 +11,7 @@
  *    Renaming bumps the conversation's updated_at, so the next sweep will
  *    re-process the same chat. If the transform isn't idempotent the
  *    extension renames it again, which bumps updated_at again... forever.
- *    (Concretely: always STRIP any existing 🔴/✅ prefix before adding one.)
+ *    (Concretely: always STRIP any existing 💤🔴/🔴/✅ prefix before adding one.)
  *
  * 2. status === null  ->  return currentTitle UNCHANGED. No marker means we
  *    know nothing; never touch a chat without an explicit signal.
@@ -25,7 +25,8 @@
  *  - Anything else you want — e.g. cap title length after prefixing.
  */
 
-const PREFIXES = ['🔴', '✅'];
+// Longest first so stripPrefix removes '💤🔴' whole instead of leaving '🔴'.
+const PREFIXES = ['💤🔴', '💤', '🔴', '✅'];
 
 /** Remove all leading status prefixes (with or without spaces) from a title. */
 export function stripPrefix(title) {
@@ -46,10 +47,16 @@ export function stripPrefix(title) {
 /**
  * @param {string} currentTitle - the conversation's title right now
  * @param {'waiting' | 'resolved' | null} status - from classify()
+ * @param {boolean} [snoozed] - chat has an unexpired snooze (isSnoozed)
  * @returns {string} the title the conversation should have
+ *
+ * Snooze only decorates 'waiting': a snoozed 🔴 chat shows 💤🔴 (still red —
+ * it does need you, just not yet). 'resolved' wins over snooze, and a chat
+ * with no marker stays untouched even if a stale snooze entry exists.
  */
-export function titleTransform(currentTitle, status) {
+export function titleTransform(currentTitle, status, snoozed = false) {
   if (!status) return currentTitle;
   const base = stripPrefix(currentTitle);
-  return (status === 'waiting' ? '🔴 ' : '✅ ') + base;
+  if (status === 'resolved') return '✅ ' + base;
+  return (snoozed ? '💤🔴 ' : '🔴 ') + base;
 }
