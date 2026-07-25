@@ -405,3 +405,62 @@ test('snooze refuses a wake time in the past', async () => {
 
   await assert.rejects(() => o.snooze('claude', 'c1', past()), /future/);
 });
+
+test('badge follows a snooze immediately, without waiting for a sweep', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', 'One', { lastAssistantText: WAITING }),
+    conv('c2', 'Two', { lastAssistantText: WAITING }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore();
+  const o = createOrchestrator({ adapters: { claude: a }, snoozeStore });
+
+  await o.sweep();
+  assert.equal(chrome.badge.text, '2');
+
+  // Exactly what background.js chains after the popup's snooze message.
+  await o.snooze('claude', 'c1', future());
+  await o.listWaiting();
+  assert.equal(chrome.badge.text, '1', 'snoozed chats must leave the count at once');
+
+  await o.unsnooze('claude', 'c1');
+  await o.listWaiting();
+  assert.equal(chrome.badge.text, '2', 'and come back on wake-now');
+});
+
+test('badge clears when every waiting chat is snoozed', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', '🔴 Only one')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: future() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).listWaiting();
+
+  assert.equal(chrome.badge.text, '', 'no number rather than a 0');
+});
+
+test('opening the popup re-syncs a badge left stale by an expired snooze', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', '💤🔴 Sleeping')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: past() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).listWaiting();
+
+  assert.equal(chrome.badge.text, '1', 'expiry counts again the moment we look');
+});
+
+test('listWaiting counts snoozed chats out, not 🔴 titles out', async () => {
+  // A snoozed chat still wears 🔴 (as 💤🔴) — the badge must key off the
+  // schedule, not off the title losing its dot.
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '💤🔴 Sleeping'),
+    conv('c2', '🔴 Awake'),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: future() } });
+  const { waiting, snoozed } = await createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore,
+  }).listWaiting();
+
+  assert.equal(chrome.badge.text, '1');
+  assert.equal(waiting.length, 1);
+  assert.equal(snoozed.length, 1, 'still listed, just not counted');
+});

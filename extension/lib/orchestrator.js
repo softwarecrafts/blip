@@ -45,6 +45,26 @@ export function isWaitingTitle(name) {
   return name.startsWith('🔴') || name.startsWith('💤🔴');
 }
 
+/**
+ * The single place that decides what the toolbar badge shows.
+ *
+ * `waitingCount` is always the UNSNOOZED count — a snoozed chat is still 🔴
+ * and still in the popup, but the whole point of snoozing is to take it off
+ * your number until it wakes.
+ *
+ * Both sweep() and listWaiting() call this, so the badge re-syncs the moment
+ * the popup does anything, rather than waiting for the next poll.
+ */
+function setBadge({ activeCount, okCount, waitingCount }) {
+  if (activeCount && okCount === 0) {
+    chrome.action.setBadgeBackgroundColor({ color: BADGE_FAILED });
+    chrome.action.setBadgeText({ text: '!' });
+  } else {
+    chrome.action.setBadgeBackgroundColor({ color: BADGE_WAITING });
+    chrome.action.setBadgeText({ text: waitingCount ? String(waitingCount) : '' });
+  }
+}
+
 export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
   let sweeping = false;
   const snoozeState = snoozeStore ?? createSnoozeStore();
@@ -111,11 +131,16 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
    */
   async function listWaiting() {
     const settings = await getSettings();
-    if (!settings.enabled) return { waiting: [], snoozed: [] };
+    if (!settings.enabled) {
+      chrome.action.setBadgeText({ text: '' });
+      return { waiting: [], snoozed: [] };
+    }
     const now = Date.now();
     const items = [];
     const keepByPlatform = {};
-    for (const adapter of enabledAdapters(settings, adapters)) {
+    const active = enabledAdapters(settings, adapters);
+    let okCount = 0;
+    for (const adapter of active) {
       try {
         const waitingIds = new Set();
         for (const c of await adapter.list()) {
@@ -133,12 +158,17 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
         // Only adapters that listed successfully contribute a keep-set;
         // a thrown list() must not prune that platform's snoozes away.
         keepByPlatform[adapter.id] = waitingIds;
+        okCount++;
       } catch (e) {
         console.error(`[bliptracker:${adapter.id}] list failed:`, e);
       }
     }
     const pruned = await snoozeState.prune(keepByPlatform, now);
-    return partitionBySnooze(items, pruned, now);
+    const queue = partitionBySnooze(items, pruned, now);
+    // Snoozing from the popup never runs a sweep, so without this the badge
+    // would keep the pre-snooze count until the next poll (up to pollMinutes).
+    setBadge({ activeCount: active.length, okCount, waitingCount: queue.waiting.length });
+    return queue;
   }
 
   async function sweep() {
@@ -202,13 +232,7 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
       // Also re-arms the 'snooze-wake' alarm for the next wake time.
       await snoozeState.prune(keepByPlatform, now);
 
-      if (active.length && okCount === 0) {
-        chrome.action.setBadgeBackgroundColor({ color: BADGE_FAILED });
-        chrome.action.setBadgeText({ text: '!' });
-      } else {
-        chrome.action.setBadgeBackgroundColor({ color: BADGE_WAITING });
-        chrome.action.setBadgeText({ text: waitingCount ? String(waitingCount) : '' });
-      }
+      setBadge({ activeCount: active.length, okCount, waitingCount });
     } finally {
       sweeping = false;
     }
