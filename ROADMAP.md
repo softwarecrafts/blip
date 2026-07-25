@@ -45,11 +45,18 @@ routes `check-conversation` by the `platform` the content script tags.
   platform in Options (needs `chrome.scripting.registerContentScripts` to
   inject the content script after the grant; manifest stays Claude-only by
   default).
-- **Explicit per-platform toggles** in Options (`settings.platforms[id]`);
-  new platforms default **off** until enabled.
+- **Explicit per-platform toggles** in Options (`settings.platforms[id]`); new
+  platforms default **off** until enabled. The data model shipped in 0.1.1; the
+  Options UI is deliberately absent until there is a second platform to choose
+  between (a lone Claude toggle would just duplicate the master switch).
 - Per-platform **onboarding** copy (Claude preferences vs ChatGPT custom
   instructions vs Gemini saved info).
 - Keep the interface **generic** — don't over-fit to one platform's quirks.
+- **Temporary chats must be filtered in `list()`**, as the Claude adapter does.
+  The orchestrator skips a conversation whose `isTemporary` is true but does not
+  record it in `seen`, so an adapter that surfaces temporary chats would refetch
+  them on every sweep. Harmless today; fix the orchestrator if a future adapter
+  can't filter them adapter-side.
 
 ## 🔭 Future features
 

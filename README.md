@@ -72,22 +72,42 @@ popup):
 
 ## Architecture
 
+Three layers, each with one job:
+
+- **Orchestrator** (`extension/lib/orchestrator.js`) — platform-agnostic. Owns
+  the sweep, the on-demand re-check, the `seen` cache and the badge. Knows only
+  the adapter interface, never an endpoint.
+- **Service adapters** (`extension/adapters/*.js`) — one per platform, running
+  in the service worker. Own endpoints, auth and response parsing, and
+  normalise everything to `{id, name, isStarred, updatedAt, lastAssistantText,
+  isTemporary}`. Registered in `adapters/index.js`.
+- **DOM adapters** (the `DOM_ADAPTERS` map in `extension/content.js`) — one
+  entry per host, running in the page. Own selectors: `currentId(location)` and
+  `titleNodes(id)`.
+
+The split follows a process boundary, not just a file boundary: service
+adapters need the worker's cookie context, DOM adapters need the page. That's
+why `content.js` carries its own map rather than importing the registry.
+
+Beyond the layering:
+
 - **Two triggers, one brain.** `content.js` (instant, the chat you're viewing)
   and the alarm sweep (periodic, all chats incl. mobile-finished) both funnel
-  through `checkConversation`/`applyStatus` in `background.js`. No classify or
+  through `checkConversation`/`applyStatus` in the orchestrator. No classify or
   rename logic is duplicated in the content script.
 - **Idempotent renames.** Renaming bumps a chat's `updated_at`, so the next
   sweep re-checks it — `titleTransform()` is idempotent, so the re-check is a
   no-op. Convergence by design, no bookkeeping.
-- **Best-effort DOM paint.** The instant sidebar update writes to claude.ai's
+- **Best-effort DOM paint.** The instant sidebar update writes to the page's
   DOM; if React reverts it, the resulting mutation re-triggers our observer and
   we re-apply. The server-side rename is the source of truth regardless.
-- **No backend.** All requests go directly to claude.ai with your own session;
-  nothing is sent anywhere else. See [PRIVACY.md](PRIVACY.md).
+- **No backend.** All requests go directly to the platform with your own
+  session; nothing is sent anywhere else. See [PRIVACY.md](PRIVACY.md).
 
 ## Confirmed endpoints (recon 2026-06-12)
 
-All under `/api/organizations/{orgId}`:
+Used only by the Claude service adapter (`extension/adapters/claude.js`); no
+other module references them. All under `/api/organizations/{orgId}`:
 
 | Method | Path | Use |
 | --- | --- | --- |
@@ -105,12 +125,19 @@ bulk-archive, and multi-AI adapters).
 
 ## Development
 
-Pure JS, no build step. Logic in `extension/lib/` (`classify.js`,
-`titleTransform.js`) is unit-testable with plain Node:
+Pure JS, no build step, no dependencies. Load `extension/` unpacked at
+`chrome://extensions`.
+
+Tests use Node's built-in runner (Node ≥ 20):
 
 ```sh
-node --input-type=module -e "import {classify} from './extension/lib/classify.js'; console.log(classify('x\n✅ Resolved — safe to archive this chat.'))"
+npm test          # node --test 'tests/**/*.test.mjs'
 ```
+
+`tests/helpers/` holds a ~50-line `chrome` stub and an in-memory fake adapter,
+so the orchestrator can be driven without a browser. Adding a platform means
+writing a service adapter and a DOM adapter — see
+[ROADMAP.md](ROADMAP.md#adding-a-platform-the-adapter-recipe).
 
 ## Feedback & contributing
 

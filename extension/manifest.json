@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "bliptracker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "See which AI chats are waiting on you. bliptracker marks your claude.ai chat titles 🔴 waiting / ✅ done, synced to mobile.",
   "background": { "service_worker": "background.js", "type": "module" },
   "permissions": ["alarms", "storage"],
