@@ -40,7 +40,6 @@ fields.pollMinutes.addEventListener('change', async (e) => {
   await setSettings({ pollMinutes: n });
   flashSaved();
 });
-
 document.getElementById('setup').addEventListener('click', (e) => {
   e.preventDefault();
   chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });

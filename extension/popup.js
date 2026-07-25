@@ -13,12 +13,12 @@ function render(waiting) {
   countEl.textContent = waiting.length ? `${waiting.length}` : '';
   emptyEl.hidden = waiting.length > 0;
   listEl.replaceChildren(
-    ...waiting.map(({ uuid, name }) => {
+    ...waiting.map(({ url, name }) => {
       const li = document.createElement('li');
       const a = document.createElement('a');
       a.className = 'chat';
       a.textContent = name;
-      a.href = `https://claude.ai/chat/${uuid}`;
+      a.href = url;
       a.title = name;
       // Open in a new tab via the extension so the popup can close cleanly.
       a.addEventListener('click', (e) => {

@@ -7,6 +7,9 @@ export const DEFAULT_SETTINGS = {
   enabled: true, // master on/off for the whole extension
   mirrorStar: false, // 🔴 -> star the chat, ✅ -> unstar (off: stars stay yours)
   pollMinutes: 10, // background sweep cadence
+  // Per-platform on/off. A platform is active only when its value === true.
+  // New (optional-permission) platforms default off until enabled in Options.
+  platforms: { claude: true },
 };
 
 export async function getSettings() {

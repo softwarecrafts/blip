@@ -21,14 +21,35 @@ provider-neutral (Claude today, more later).
 
 ## ▶️ Next (build-side, mine)
 
-- **Adapter refactor** — pull the Claude-specific endpoints + DOM selectors
-  behind an adapter interface so ChatGPT / Gemini become drop-in adapters.
-  (Ship Claude-only first; this is the "neutral brand, adapter-ready" plan.)
-- **Web Store screenshots** — capture popup / onboarding / options / a labelled
-  sidebar at 1280×800 for the listing.
-- **Listing polish** — rewrite `store-assets/LISTING.md` copy in the radar voice.
-- **Fill landing placeholders** — GitHub URL, Web Store URL, Privacy link
-  (blocked on the GitHub push + listing existing).
+- _(done)_ ~~Web Store screenshots~~, ~~listing polish~~, ~~landing placeholders~~,
+  ~~adapter refactor~~ — all shipped.
+
+### Adding a platform (the adapter recipe)
+
+The refactor (2026-06-22) split every platform into two halves:
+
+1. **Service adapter** — `extension/adapters/<id>.js`, registered in
+   `adapters/index.js`. Implements `list()`, `get(id)` →
+   `{name,isStarred,updatedAt,lastAssistantText,isTemporary}`, `rename(id,name)`,
+   `setStarred(id,bool)`, `conversationUrl(id)`, `capabilities` (e.g. `star`).
+   Runs in the background worker; owns all endpoints/auth/parsing.
+2. **DOM adapter** — a host-keyed entry in `content.js` (`DOM_ADAPTERS`):
+   `currentId(location)` + `titleNodes(id)`. Runs in the page; owns selectors.
+
+The orchestrator (`background.js`) is platform-agnostic — it loops
+`enabledAdapters(settings)`, namespaces the `seen` cache per platform, and
+routes `check-conversation` by the `platform` the content script tags.
+
+**Decisions for the next platform (ChatGPT/Gemini):**
+- **Optional host permissions**, requested only when the user enables that
+  platform in Options (needs `chrome.scripting.registerContentScripts` to
+  inject the content script after the grant; manifest stays Claude-only by
+  default).
+- **Explicit per-platform toggles** in Options (`settings.platforms[id]`);
+  new platforms default **off** until enabled.
+- Per-platform **onboarding** copy (Claude preferences vs ChatGPT custom
+  instructions vs Gemini saved info).
+- Keep the interface **generic** — don't over-fit to one platform's quirks.
 
 ## 🔭 Future features
 
@@ -47,15 +68,9 @@ provider-neutral (Claude today, more later).
   paginate for full-history coverage if needed.
 - **Extension-page brand fonts** — adopt Chakra Petch in onboarding/options
   (needs the font bundled locally for the extension, not a CDN link).
-- **Multi-AI** — ChatGPT, Gemini adapters (depends on the adapter refactor).
-
-## 🚚 Distribution
-
-- [ ] Push to GitHub (repo currently local-only)
-- [ ] Register / point `bliptracker.xyz`
-- [ ] Host PRIVACY.md at a public URL (GitHub Pages)
-- [ ] Chrome Web Store: $5 dev registration + submit
-- [ ] Open-source the repo
+- **Multi-AI** — ChatGPT, Gemini adapters. Architecture is ready (see the
+  adapter recipe above); each needs endpoint recon + its two adapter halves +
+  optional-permission wiring + onboarding copy.
 
 ## Notes / constraints
 
