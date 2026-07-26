@@ -38,13 +38,20 @@
         background: none;
         border: none;
         color: inherit;
-        opacity: 0.45;
+        /* Icons stroke in currentColor, so this is real contrast against the
+           popup background rather than a fixed emoji colour being faded out. */
+        opacity: 0.55;
         cursor: pointer;
         padding: 4px;
         border-radius: 6px;
-        line-height: 1;
+        display: flex;
+        align-items: center;
       }
-      .row-btn:hover { opacity: 1; background: color-mix(in srgb, currentColor 10%, transparent); }
+      .row-btn svg { display: block; } /* kill the inline-baseline gap */
+      .row-btn:hover, .row-btn:focus-visible {
+        opacity: 1;
+        background: color-mix(in srgb, currentColor 10%, transparent);
+      }
       /* Inline snooze panel, moved beneath the row it was opened from. */
       #snooze-panel[hidden] { display: none; } /* display:flex would beat the hidden attr */
       #snooze-panel {

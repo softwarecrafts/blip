@@ -52,11 +52,50 @@ function chatLink(url, name) {
   return a;
 }
 
-function rowButton(text, title, onClick) {
+/**
+ * Row icons are inline SVG, not emoji. 💤 and ⏰ are colour emoji: they paint
+ * themselves in a fixed palette (💤 is dark navy) and ignore `color`, so on a
+ * dark popup they were nearly invisible and no amount of theming could reach
+ * them. These stroke themselves in currentColor, so they follow the light/dark
+ * scheme like everything else.
+ */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+const ICONS = {
+  // Moon / sun: snoozing puts a chat to bed, waking it brings it back.
+  snooze: ['M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'],
+  wake: [
+    'M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z',
+    'M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41' +
+      'M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41',
+  ],
+};
+
+function icon(paths) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '15');
+  svg.setAttribute('height', '15');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const d of paths) {
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', d);
+    svg.appendChild(path);
+  }
+  return svg;
+}
+
+function rowButton(paths, title, onClick) {
   const btn = document.createElement('button');
   btn.className = 'row-btn';
-  btn.textContent = text;
+  btn.appendChild(icon(paths));
   btn.title = title;
+  btn.setAttribute('aria-label', title); // the icon carries no text now
   btn.addEventListener('click', onClick);
   return btn;
 }
@@ -70,7 +109,7 @@ function render({ waiting = [], snoozed = [] }) {
     ...waiting.map(({ platform, id, url, name }) => {
       const li = document.createElement('li');
       li.appendChild(chatLink(url, name));
-      li.appendChild(rowButton('💤', 'Snooze', () => togglePanel(li, { platform, id })));
+      li.appendChild(rowButton(ICONS.snooze, 'Snooze', () => togglePanel(li, { platform, id })));
       return li;
     })
   );
@@ -85,7 +124,7 @@ function render({ waiting = [], snoozed = [] }) {
       wake.className = 'wake';
       wake.textContent = formatWake(wakeAt);
       li.appendChild(wake);
-      li.appendChild(rowButton('⏰', 'Wake now', () => send('unsnooze', { platform, id })));
+      li.appendChild(rowButton(ICONS.wake, 'Wake now', () => send('unsnooze', { platform, id })));
       return li;
     })
   );
