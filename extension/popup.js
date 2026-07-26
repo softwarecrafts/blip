@@ -10,7 +10,15 @@
  * Refresh — accepted; no timers or storage listeners for a window this
  * short-lived.
  */
-import { SNOOZE_PRESETS, presetWakeTime, formatWake } from './lib/snooze.js';
+import {
+  availablePresets,
+  presetWakeTime,
+  formatWake,
+  toDateValue,
+  timeSlots,
+  wakeFromParts,
+  defaultPickerDate,
+} from './lib/snooze.js';
 
 const listEl = document.getElementById('list');
 const countEl = document.getElementById('count');
@@ -19,7 +27,9 @@ const snoozedEl = document.getElementById('snoozed');
 const snoozedListEl = document.getElementById('snoozed-list');
 const snoozedCountEl = document.getElementById('snoozed-count');
 const panelEl = document.getElementById('snooze-panel');
-const customEl = document.getElementById('snooze-custom');
+const dateEl = document.getElementById('snooze-date');
+const timeEl = document.getElementById('snooze-time');
+const setEl = document.getElementById('snooze-set');
 
 let panelTarget = null; // { platform, id } the open snooze panel targets
 
@@ -83,20 +93,32 @@ function render({ waiting = [], snoozed = [] }) {
 
 /* --- snooze panel (one shared instance, moved under the clicked row) --- */
 
-// datetime-local wants local wall-clock "YYYY-MM-DDTHH:MM" — toISOString()
-// is UTC and would shift the value by the timezone offset.
-function toLocalDatetimeValue(ms) {
-  const d = new Date(ms);
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+/**
+ * Refill the time dropdown for whatever date is selected, keeping the chosen
+ * slot if it survives. Past slots are dropped, so an empty list means the day
+ * is over — Set is disabled rather than allowed to submit a time in the past.
+ */
+function refreshTimeOptions() {
+  const wanted = timeEl.value;
+  const slots = timeSlots(dateEl.value);
+  timeEl.replaceChildren(
+    ...(slots.length
+      ? slots.map((value) => new Option(value, value, false, value === wanted))
+      : [new Option('—', '')])
+  );
+  // With nothing explicitly selected the browser picks the first option, so
+  // the soonest slot is ready to Set without touching the dropdown.
+  timeEl.disabled = setEl.disabled = slots.length === 0;
 }
 
 function togglePanel(li, target) {
   if (sameChat(panelTarget, target) && !panelEl.hidden) return closePanel();
   panelTarget = target;
-  customEl.value = '';
-  customEl.classList.remove('invalid');
-  customEl.min = toLocalDatetimeValue(Date.now() + 60_000);
+  // Reset the picker each open: "today" goes stale in a popup left sitting.
+  dateEl.min = toDateValue(Date.now());
+  dateEl.value = defaultPickerDate();
+  timeEl.value = '';
+  refreshTimeOptions();
   li.after(panelEl);
   panelEl.hidden = false;
 }
@@ -107,7 +129,10 @@ function closePanel() {
   document.body.appendChild(panelEl); // park it outside the list
 }
 
-for (const { id, label } of SNOOZE_PRESETS) {
+// Built once: the popup is short-lived, so "available" is evaluated for the
+// moment it opened. presetWakeTime is called at click time, not now, so the
+// wake time is measured from when you actually chose it.
+for (const { id, label } of availablePresets()) {
   const btn = document.createElement('button');
   btn.className = 'preset';
   btn.textContent = label;
@@ -117,12 +142,14 @@ for (const { id, label } of SNOOZE_PRESETS) {
   panelEl.insertBefore(btn, panelEl.querySelector('.custom-row'));
 }
 
-document.getElementById('snooze-set').addEventListener('click', () => {
-  const wakeAt = new Date(customEl.value).getTime();
-  if (!panelTarget || Number.isNaN(wakeAt) || wakeAt <= Date.now()) {
-    customEl.classList.add('invalid');
-    return;
-  }
+dateEl.addEventListener('change', refreshTimeOptions);
+
+setEl.addEventListener('click', () => {
+  if (!panelTarget || !dateEl.value || !timeEl.value) return;
+  const wakeAt = wakeFromParts(dateEl.value, timeEl.value);
+  // The dropdown only ever offers future slots, but the popup can sit open
+  // long enough for the earliest of them to go stale.
+  if (wakeAt <= Date.now()) return refreshTimeOptions();
   send('snooze', { ...panelTarget, wakeAt });
 });
 

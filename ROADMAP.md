@@ -11,10 +11,11 @@ provider-neutral (Claude today, more later).
 - **Star mirroring** (optional, off by default) — 🔴 ⇒ starred, ✅ ⇒ unstarred.
 - **Popup queue** — toolbar icon shows the "waiting on you" list as deep links;
   badge shows the count.
-- **Snooze** — per-chat mute from the popup (presets + custom time). Snoozed
-  chats leave the queue/badge, get a `💤🔴` title (syncs to mobile), and sit in
-  a collapsed Snoozed section until a one-shot alarm wakes them. Wake schedule
-  is local (`chrome.storage.local`), keyed per platform like the `seen` cache.
+- **Snooze** — per-chat mute from the popup: six presets, or a date + time on a
+  half-hour grid. Snoozed chats leave the queue/badge, get a `💤🔴` title (syncs
+  to mobile), and sit in a collapsed Snoozed section until a one-shot alarm
+  wakes them. Wake schedule is local (`chrome.storage.local`), keyed per
+  platform like `seen`.
 - **Settings page** — enabled / star mirroring / sweep interval.
 - **Onboarding page** — opens on install: copy the preference prompt + deep link
   to Claude settings.

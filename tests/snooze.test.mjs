@@ -2,7 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   SNOOZE_PRESETS,
+  availablePresets,
   presetWakeTime,
+  SNOOZE_TIME_STEP_MINUTES,
+  toDateValue,
+  timeSlots,
+  wakeFromParts,
+  defaultPickerDate,
   wakeAt,
   isSnoozed,
   withSnooze,
@@ -44,6 +50,131 @@ test("'tomorrow' is next calendar day 09:00 local, morning or night", () => {
 
 test('unknown preset throws', () => {
   assert.throws(() => presetWakeTime('nope', at(10)));
+});
+
+test("'evening' is 18:00 today when the day still has an evening left", () => {
+  assert.equal(presetWakeTime('evening', at(10)), new Date(2026, 6, 14, 18).getTime());
+  assert.equal(presetWakeTime('evening', at(17, 59)), new Date(2026, 6, 14, 18).getTime());
+});
+
+test("'evening' rolls to tomorrow once 18:00 has passed", () => {
+  // Guards against ever handing setSnooze a wake time in the past, even
+  // though the popup hides this preset after 18:00.
+  const tomorrowEvening = new Date(2026, 6, 15, 18).getTime();
+  assert.equal(presetWakeTime('evening', at(18)), tomorrowEvening, 'exactly 18:00 counts as past');
+  assert.equal(presetWakeTime('evening', at(23, 30)), tomorrowEvening);
+});
+
+test("'monday' is the next Monday 09:00, and a full week away on a Monday", () => {
+  const mondayAt9 = (day) => new Date(2026, 6, day, 9).getTime();
+  // 14 Jul 2026 is a Tuesday; 20 Jul is the following Monday.
+  assert.equal(presetWakeTime('monday', at(10)), mondayAt9(20), 'from Tuesday');
+  assert.equal(
+    presetWakeTime('monday', new Date(2026, 6, 19, 10).getTime()),
+    mondayAt9(20),
+    'from Sunday — tomorrow'
+  );
+  assert.equal(
+    presetWakeTime('monday', new Date(2026, 6, 20, 10).getTime()),
+    mondayAt9(27),
+    'from Monday — the NEXT Monday, not today'
+  );
+});
+
+test('every preset resolves strictly into the future, at any hour', () => {
+  for (let h = 0; h < 24; h++) {
+    const now = at(h, 30);
+    for (const { id } of SNOOZE_PRESETS) {
+      assert.ok(presetWakeTime(id, now) > now, `${id} at ${h}:30`);
+    }
+  }
+});
+
+test('availablePresets hides "This evening" only once the evening has gone', () => {
+  const ids = (now) => availablePresets(now).map((p) => p.id);
+  assert.ok(ids(at(9)).includes('evening'), 'morning');
+  assert.ok(ids(at(17, 59)).includes('evening'), 'just before 18:00');
+  assert.ok(!ids(at(18)).includes('evening'), 'from 18:00 on');
+  assert.ok(!ids(at(22)).includes('evening'), 'late evening');
+});
+
+test('availablePresets keeps menu order and never drops the unconditional ones', () => {
+  const always = SNOOZE_PRESETS.filter((p) => !p.available).map((p) => p.id);
+  for (const h of [0, 9, 18, 23]) {
+    const ids = availablePresets(at(h)).map((p) => p.id);
+    for (const id of always) assert.ok(ids.includes(id), `${id} at ${h}:00`);
+    const order = SNOOZE_PRESETS.map((p) => p.id).filter((id) => ids.includes(id));
+    assert.deepEqual(ids, order, `order preserved at ${h}:00`);
+  }
+});
+
+/* --- custom "snooze until" picker --- */
+
+test('toDateValue formats the LOCAL calendar date, not the UTC one', () => {
+  assert.equal(toDateValue(new Date(2026, 6, 14, 10).getTime()), '2026-07-14');
+  // 23:30 local is already the next day in UTC east of Greenwich; the picker
+  // must still say the 14th, because that is the day the user is living in.
+  assert.equal(toDateValue(new Date(2026, 6, 14, 23, 30).getTime()), '2026-07-14');
+  assert.equal(toDateValue(new Date(2026, 6, 14, 0, 30).getTime()), '2026-07-14');
+});
+
+test('wakeFromParts builds a local wall-clock time', () => {
+  assert.equal(wakeFromParts('2026-07-14', '09:30'), new Date(2026, 6, 14, 9, 30).getTime());
+  assert.equal(wakeFromParts('2026-07-14', '00:00'), new Date(2026, 6, 14, 0, 0).getTime());
+});
+
+test('wakeFromParts round-trips through toDateValue', () => {
+  const ms = new Date(2026, 6, 14, 18, 30).getTime();
+  assert.equal(wakeFromParts(toDateValue(ms), '18:30'), ms);
+});
+
+test('timeSlots covers the whole day on a future date, on the grid', () => {
+  const slots = timeSlots('2026-07-20', at(10));
+  assert.equal(slots.length, (24 * 60) / SNOOZE_TIME_STEP_MINUTES, '48 half-hour slots');
+  assert.equal(slots[0], '00:00');
+  assert.equal(slots[1], '00:30');
+  assert.equal(slots.at(-1), '23:30');
+  for (const s of slots) {
+    assert.match(s, /^\d{2}:\d{2}$/);
+    assert.equal(Number(s.slice(3)) % SNOOZE_TIME_STEP_MINUTES, 0, s);
+  }
+});
+
+test('timeSlots drops slots already gone today', () => {
+  const slots = timeSlots('2026-07-14', at(10, 5));
+  assert.equal(slots[0], '10:30', 'the 10:00 slot has passed');
+  assert.ok(!slots.includes('09:30'));
+  assert.equal(slots.at(-1), '23:30');
+});
+
+test('timeSlots treats a slot exactly at now as gone', () => {
+  const slots = timeSlots('2026-07-14', at(10, 0));
+  assert.equal(slots[0], '10:30', 'never offer a wake time of exactly now');
+});
+
+test('timeSlots is empty for a past date, and after the last slot of today', () => {
+  assert.deepEqual(timeSlots('2026-07-13', at(10)), [], 'yesterday');
+  assert.deepEqual(timeSlots('2026-07-14', at(23, 45)), [], 'past the 23:30 slot');
+});
+
+test('every offered slot is strictly in the future', () => {
+  for (const h of [0, 9, 15, 23]) {
+    const now = at(h, 20);
+    for (const slot of timeSlots(toDateValue(now), now)) {
+      assert.ok(wakeFromParts(toDateValue(now), slot) > now, `${slot} at ${h}:20`);
+    }
+  }
+});
+
+test('defaultPickerDate opens on today while the day still has slots', () => {
+  assert.equal(defaultPickerDate(at(10)), '2026-07-14');
+  assert.equal(defaultPickerDate(at(23, 20)), '2026-07-14', '23:30 is still available');
+});
+
+test('defaultPickerDate rolls to tomorrow once today is spent', () => {
+  // Otherwise a late-night snooze opens the picker on an empty dropdown.
+  assert.equal(defaultPickerDate(at(23, 45)), '2026-07-15');
+  assert.ok(timeSlots(defaultPickerDate(at(23, 45)), at(23, 45)).length > 0);
 });
 
 /* --- platform-scoped map access --- */
