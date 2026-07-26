@@ -7,8 +7,9 @@
  */
 import { getSettings } from './lib/settings.js';
 import { createOrchestrator } from './lib/orchestrator.js';
+import { WAKE_ALARM } from './lib/snoozeStore.js';
 
-const { sweep, checkConversation, listWaiting } = createOrchestrator();
+const { sweep, checkConversation, listWaiting, snooze, unsnooze } = createOrchestrator();
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   await resetAlarm();
@@ -21,7 +22,9 @@ chrome.runtime.onStartup.addListener(() => {
   resetAlarm();
   sweep();
 });
-chrome.alarms.onAlarm.addListener((a) => a.name === 'sweep' && sweep());
+// WAKE_ALARM is a one-shot set for the earliest wake time; the sweep it
+// triggers prunes the expired snooze, restores the title/badge, and re-arms.
+chrome.alarms.onAlarm.addListener((a) => (a.name === 'sweep' || a.name === WAKE_ALARM) && sweep());
 
 // Recreate the alarm when the poll cadence (or any setting) changes.
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -39,6 +42,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     'check-conversation': () => checkConversation(msg.platform, msg.id).then((name) => ({ name })),
     'get-waiting': () => listWaiting(),
     'run-sweep': () => sweep().then(() => listWaiting()),
+    'snooze': () => snooze(msg.platform, msg.id, msg.wakeAt).then(() => listWaiting()),
+    'unsnooze': () => unsnooze(msg.platform, msg.id).then(() => listWaiting()),
   };
   const handler = handlers[msg?.type];
   if (!handler) return;

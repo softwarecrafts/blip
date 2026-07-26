@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { makeChromeStub } from './helpers/chrome-stub.mjs';
 import { makeFakeAdapter, conv } from './helpers/fake-adapter.mjs';
+import { makeFakeSnoozeStore } from './helpers/fake-snooze-store.mjs';
 import { createOrchestrator } from '../extension/lib/orchestrator.js';
 
 const WAITING = '🔴 Waiting on you: your move';
@@ -245,4 +246,221 @@ test('listWaiting: a failing adapter yields an empty queue, not a throw', async 
   const { waiting } = await createOrchestrator({ adapters: { claude: bad } }).listWaiting();
 
   assert.deepEqual(waiting, []);
+});
+
+// ── snooze integration ──────────────────────────────────────────────────────
+
+const HOUR = 3_600_000;
+const future = () => Date.now() + HOUR;
+const past = () => Date.now() - 1000;
+
+test('sweep: a snoozed waiting chat is titled 💤🔴, not 🔴', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', 'Plan the launch', { lastAssistantText: WAITING }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: future() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).sweep();
+
+  assert.deepEqual(a.calls.rename, [['c1', '💤🔴 Plan the launch']]);
+});
+
+test('sweep: snoozed chats are kept off the badge', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', 'One', { lastAssistantText: WAITING }),
+    conv('c2', 'Two', { lastAssistantText: WAITING }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c2: future() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).sweep();
+
+  assert.equal(chrome.badge.text, '1', 'only the unsnoozed chat counts');
+});
+
+test('sweep: an expired snooze strips the 💤 even though updatedAt is unchanged', async () => {
+  // The regression this guards: `seen` short-circuits on updatedAt, but a
+  // snooze expiring changes nothing server-side — so without the staleness
+  // check the 💤 would survive on a quiet chat forever.
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '💤🔴 Plan the launch', { lastAssistantText: WAITING, updatedAt: 'T0' }),
+  ]);
+  globalThis.chrome = makeChromeStub({
+    settings: settings(['claude']),
+    seen: { claude: { c1: 'T0' } }, // would otherwise skip the fetch entirely
+  });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: past() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).sweep();
+
+  assert.deepEqual(a.calls.rename, [['c1', '🔴 Plan the launch']]);
+  assert.equal(chrome.badge.text, '1', 'and it comes back onto the badge');
+});
+
+test('sweep: a title that agrees with the schedule is not re-fetched', async () => {
+  // The other half of the staleness check: it must not defeat the seen cache
+  // for every snoozed chat on every sweep.
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '💤🔴 Plan the launch', { lastAssistantText: WAITING, updatedAt: 'T0' }),
+  ]);
+  globalThis.chrome = makeChromeStub({
+    settings: settings(['claude']),
+    seen: { claude: { c1: 'T0' } },
+  });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: future() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).sweep();
+
+  assert.equal(a.calls.get.length, 0, 'no wasted fetch while the 💤 is correct');
+  assert.deepEqual(a.calls.rename, []);
+});
+
+test('sweep: resolving a snoozed chat drops its snooze', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '💤🔴 Plan the launch', { lastAssistantText: RESOLVED }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: future() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).sweep();
+
+  assert.deepEqual(a.calls.rename, [['c1', '✅ Plan the launch']]);
+  assert.deepEqual(snoozeStore.peek(), {}, '✅ cancels a snooze');
+});
+
+test('sweep: a chat leaving the list window drops its snooze', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '🔴 One', { lastAssistantText: WAITING }),
+    conv('c2', '🔴 Two', { lastAssistantText: WAITING }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: future(), c2: future() } });
+  const o = createOrchestrator({ adapters: { claude: a }, snoozeStore });
+
+  await o.sweep();
+  assert.deepEqual(Object.keys(snoozeStore.peek().claude).sort(), ['c1', 'c2']);
+
+  a.drop('c2');
+  await o.sweep();
+  assert.deepEqual(Object.keys(snoozeStore.peek().claude), ['c1']);
+});
+
+test('listWaiting: splits the queue into waiting and snoozed with wake times', async () => {
+  const wake = future();
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '🔴 Awake'),
+    conv('c2', '💤🔴 Sleeping'),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c2: wake } });
+  const { waiting, snoozed } = await createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore,
+  }).listWaiting();
+
+  assert.deepEqual(waiting.map((i) => i.id), ['c1']);
+  assert.deepEqual(snoozed.map((i) => i.id), ['c2']);
+  assert.equal(snoozed[0].wakeAt, wake);
+  assert.equal(snoozed[0].url, 'https://claude.test/chat/c2', 'snoozed rows are still links');
+});
+
+test('listWaiting: an expired snooze is already back under waiting', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', '💤🔴 Sleeping')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: past() } });
+  const { waiting, snoozed } = await createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore,
+  }).listWaiting();
+
+  assert.deepEqual(waiting.map((i) => i.id), ['c1']);
+  assert.deepEqual(snoozed, []);
+});
+
+test('listWaiting: a failing adapter does not lose its snoozes', async () => {
+  const good = makeFakeAdapter('alpha', [conv('x1', '🔴 Alpha')]);
+  const bad = makeFakeAdapter('beta', [conv('y1', '🔴 Beta')], { listThrows: true });
+  globalThis.chrome = makeChromeStub({ settings: settings(['alpha', 'beta']) });
+  const snoozeStore = makeFakeSnoozeStore({ beta: { y1: future() } });
+  await createOrchestrator({ adapters: { alpha: good, beta: bad }, snoozeStore }).listWaiting();
+
+  assert.ok(snoozeStore.peek().beta?.y1, 'a list() failure must not read as "not waiting"');
+});
+
+test('snooze/unsnooze decorate the title immediately, not at next sweep', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '🔴 Plan the launch', { lastAssistantText: WAITING }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore();
+  const o = createOrchestrator({ adapters: { claude: a }, snoozeStore });
+
+  await o.snooze('claude', 'c1', future());
+  assert.deepEqual(a.calls.rename.at(-1), ['c1', '💤🔴 Plan the launch']);
+
+  await o.unsnooze('claude', 'c1');
+  assert.deepEqual(a.calls.rename.at(-1), ['c1', '🔴 Plan the launch']);
+});
+
+test('snooze refuses a wake time in the past', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', '🔴 Plan')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const o = createOrchestrator({ adapters: { claude: a } });
+
+  await assert.rejects(() => o.snooze('claude', 'c1', past()), /future/);
+});
+
+test('badge follows a snooze immediately, without waiting for a sweep', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', 'One', { lastAssistantText: WAITING }),
+    conv('c2', 'Two', { lastAssistantText: WAITING }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore();
+  const o = createOrchestrator({ adapters: { claude: a }, snoozeStore });
+
+  await o.sweep();
+  assert.equal(chrome.badge.text, '2');
+
+  // Exactly what background.js chains after the popup's snooze message.
+  await o.snooze('claude', 'c1', future());
+  await o.listWaiting();
+  assert.equal(chrome.badge.text, '1', 'snoozed chats must leave the count at once');
+
+  await o.unsnooze('claude', 'c1');
+  await o.listWaiting();
+  assert.equal(chrome.badge.text, '2', 'and come back on wake-now');
+});
+
+test('badge clears when every waiting chat is snoozed', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', '🔴 Only one')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: future() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).listWaiting();
+
+  assert.equal(chrome.badge.text, '', 'no number rather than a 0');
+});
+
+test('opening the popup re-syncs a badge left stale by an expired snooze', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', '💤🔴 Sleeping')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: past() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).listWaiting();
+
+  assert.equal(chrome.badge.text, '1', 'expiry counts again the moment we look');
+});
+
+test('listWaiting counts snoozed chats out, not 🔴 titles out', async () => {
+  // A snoozed chat still wears 🔴 (as 💤🔴) — the badge must key off the
+  // schedule, not off the title losing its dot.
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '💤🔴 Sleeping'),
+    conv('c2', '🔴 Awake'),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: future() } });
+  const { waiting, snoozed } = await createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore,
+  }).listWaiting();
+
+  assert.equal(chrome.badge.text, '1');
+  assert.equal(waiting.length, 1);
+  assert.equal(snoozed.length, 1, 'still listed, just not counted');
 });

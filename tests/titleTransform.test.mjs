@@ -30,3 +30,36 @@ test('titleTransform: is idempotent (the sweep depends on this)', () => {
 test('stripPrefix: removes stacked prefixes left by any earlier bug', () => {
   assert.equal(stripPrefix('🔴 ✅ 🔴 Plan the launch'), 'Plan the launch');
 });
+
+/* --- snooze: the 💤🔴 prefix (see snooze.js) --- */
+
+test('stripPrefix: removes the compound 💤🔴 whole, not just the 🔴', () => {
+  assert.equal(stripPrefix('💤🔴 Plan the launch'), 'Plan the launch');
+  assert.equal(stripPrefix('💤🔴Plan the launch'), 'Plan the launch'); // no-space variant
+});
+
+test('titleTransform: null status is untouched even with a stale snooze', () => {
+  assert.equal(titleTransform('Plan the launch', null, true), 'Plan the launch');
+});
+
+test('titleTransform: a snoozed waiting chat is 💤🔴 — still red', () => {
+  assert.equal(titleTransform('Plan the launch', 'waiting', true), '💤🔴 Plan the launch');
+});
+
+test('titleTransform: snooze transitions swap the whole prefix both ways', () => {
+  assert.equal(titleTransform('🔴 Plan the launch', 'waiting', true), '💤🔴 Plan the launch');
+  assert.equal(titleTransform('💤🔴 Plan the launch', 'waiting', false), '🔴 Plan the launch');
+});
+
+test('titleTransform: resolved wins over snooze', () => {
+  assert.equal(titleTransform('💤🔴 Plan the launch', 'resolved', true), '✅ Plan the launch');
+});
+
+test('titleTransform: idempotent for every status × snoozed combination', () => {
+  for (const status of ['waiting', 'resolved', null]) {
+    for (const snoozed of [false, true]) {
+      const once = titleTransform('💤🔴 Plan the launch', status, snoozed);
+      assert.equal(titleTransform(once, status, snoozed), once, `${status}/${snoozed}`);
+    }
+  }
+});
