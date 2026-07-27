@@ -118,7 +118,7 @@ other module references them. All under `/api/organizations/{orgId}`:
 
 | Method | Path | Use |
 | --- | --- | --- |
-| GET | `/chat_conversations?limit=N` | list (incl. `updated_at`, `is_starred`) |
+| GET | `/chat_conversations?limit=N&offset=M` | list, `updated_at` desc (incl. `is_starred`); a short page means end-of-list |
 | GET | `/chat_conversations/{uuid}` | full chat incl. `chat_messages[]` |
 | PUT | `/chat_conversations/{uuid}` `{"name":…}` | rename |
 | PUT | `/chat_conversations/{uuid}` `{"is_starred":bool}` | star |
