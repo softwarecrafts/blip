@@ -246,15 +246,17 @@ list longer than `SEED_DEPTH`:
 
 ### `extension/fonts/` (new)
 
-Six woff2 files, `latin` subset only (not `latin-ext`) — all extension copy is
+Eight woff2 files, `latin` subset only (not `latin-ext`) — all extension copy is
 English, and any stray character outside the subset falls through to the system
-tail of the stack. ~120KB total:
+tail of the stack. ~160KB total:
 
 | File | Role |
 | --- | --- |
 | `chakra-petch-600.woff2` | display, headings |
+| `chakra-petch-600-italic.woff2` | `<em>` inside headings |
 | `chakra-petch-700.woff2` | wordmark |
 | `hanken-grotesk-400.woff2` | body |
+| `hanken-grotesk-400-italic.woff2` | `<em>` in prose |
 | `hanken-grotesk-600.woff2` | labels, buttons |
 | `jetbrains-mono-400.woff2` | data, code, timestamps |
 | `jetbrains-mono-700.woff2` | counts |
@@ -263,9 +265,22 @@ All three families are OFL-1.1, which obliges shipping the licence text:
 `OFL-Chakra-Petch.txt`, `OFL-Hanken-Grotesk.txt`, `OFL-JetBrains-Mono.txt`
 alongside the fonts.
 
-Chakra Petch is **not** a variable font, so each weight is a separate file; this
-is the reason the set is trimmed to two weights per family rather than mirroring
-the landing page's full range.
+Chakra Petch is **not** a variable font, so each weight *and* each italic is a
+separate file; this is why the set is trimmed to the specific faces used rather
+than mirroring the landing page's full range.
+
+**Why italics are in scope at all**, given no extension page currently contains
+an `<em>`: without a real italic file the browser does not fall back to another
+family, it synthesizes an oblique by shearing the upright glyphs. Chakra Petch
+is a squarish techno face with flat terminals, where that shear is conspicuous.
+Shipping the faces means the first `<em>` anyone adds renders correctly instead
+of quietly wrong.
+
+The two italic weights are fixed by the landing page's usage, not chosen freely:
+`.hero h1 em` (`landing/styles.css:181`) sits inside an `h1` at weight 600, and
+prose `<em>` (`landing/index.html:275`) sits in 400 body text. JetBrains Mono
+ships upright-only — its roles here are a textarea, a badge count and
+timestamps, none of which will be italic.
 
 ### `scripts/fetch-fonts.sh` (new)
 
@@ -275,7 +290,7 @@ are committed, so nobody needs to run it.
 
 ### `extension/ui/brand.css` (new)
 
-Contains the six `@font-face` rules (`font-display: swap`), the type tokens, and
+Contains the eight `@font-face` rules (`font-display: swap`), the type tokens, and
 the primitives currently duplicated across three inline `<style>` blocks
 (`button`/`a.btn`, `.desc`, `.note`, `code`).
 
@@ -325,6 +340,11 @@ pages in both light and dark, and specifically confirm:
   popup list.
 - **Onboarding textarea.** The preference prompt contains emoji inside a mono
   block; check line height and that the copy button still works.
+- **Italics are real, not synthesized.** Each italic `@font-face` must declare
+  `font-style: italic` in its descriptor block — omit it and the browser ignores
+  the file and shears the upright face instead, which is the exact failure the
+  italics were added to prevent. Verify by temporarily dropping an `<em>` into a
+  heading and a paragraph and comparing against the landing page.
 
 ## Sequencing
 
