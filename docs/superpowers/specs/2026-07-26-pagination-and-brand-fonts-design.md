@@ -290,9 +290,19 @@ are committed, so nobody needs to run it.
 
 ### `extension/ui/brand.css` (new)
 
-Contains the eight `@font-face` rules (`font-display: swap`), the type tokens, and
-the primitives currently duplicated across three inline `<style>` blocks
-(`button`/`a.btn`, `.desc`, `.note`, `code`).
+Contains the eight `@font-face` rules (`font-display: swap`), the three type
+tokens, and base typography only: `h1, h2, h3`, `em`, and `code, kbd, samp`.
+
+It deliberately does **not** extract shared components. Reading the three pages
+shows less duplication than expected — `.desc` is options-only, `.note` is
+onboarding-only, and the `button` rules genuinely differ (onboarding's are
+bordered and padded, the popup's are borderless icon buttons). Merging those
+into one primitive would be a regression risk for no gain.
+
+Note also that all three pages set their body font with the `font:` *shorthand*,
+which resets `font-family`, and their inline `<style>` comes after the linked
+stylesheet. Linking `brand.css` alone therefore changes nothing — each page's
+own `body` rule must be edited to use `var(--font-body)`.
 
 Tokens are named `--font-display` / `--font-body` / `--font-mono`, not the
 landing page's `--serif` / `--sans` / `--mono`. Chakra Petch under a `--serif`
