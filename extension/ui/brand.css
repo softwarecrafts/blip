@@ -1,0 +1,101 @@
+/**
+ * bliptracker brand type system for extension pages.
+ *
+ * Linked by popup.html, options.html and onboarding.html. Mirrors the type
+ * roles in landing/styles.css — Chakra Petch for uppercase display, Hanken
+ * Grotesk for body, JetBrains Mono for data — but bundles the faces locally,
+ * because an extension page cannot reach the Google Fonts CDN.
+ *
+ * TYPE ONLY. Colours, `color-scheme: light dark`, and every component style
+ * stay in the pages themselves. This file must not introduce a colour.
+ *
+ * Tokens are deliberately NOT named --serif/--sans/--mono as landing/ does:
+ * Chakra Petch under a `--serif` name is actively misleading, and nothing
+ * shares a stylesheet between the two surfaces.
+ *
+ * Every stack keeps the previous system font as its tail, so a missing or
+ * corrupt woff2 degrades to how these pages looked before, not to Times.
+ *
+ * NOTE for anyone adding a page: all three pages set their body font with the
+ * `font:` SHORTHAND, which resets font-family, and their inline <style> comes
+ * after this stylesheet. Linking this file alone is a no-op — the page's own
+ * body rule has to use var(--font-body).
+ */
+
+/* Each italic face MUST declare font-style: italic. Omit it and the browser
+   ignores the file and shears the upright face into a fake oblique instead —
+   very visible in a squared-off techno face like Chakra Petch. */
+
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/chakra-petch-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/chakra-petch-600-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/chakra-petch-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/hanken-grotesk-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/hanken-grotesk-400-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/hanken-grotesk-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/jetbrains-mono-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/jetbrains-mono-700.woff2') format('woff2');
+}
+
+:root {
+  --font-display: 'Chakra Petch', system-ui, sans-serif;
+  --font-body: 'Hanken Grotesk', -apple-system, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* Base typography. Component styles stay with their page — the popup's
+   borderless buttons and onboarding's bordered ones are genuinely different
+   things and must not be merged into a shared primitive. */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+em { font-style: italic; }
+code, kbd, samp { font-family: var(--font-mono); }
