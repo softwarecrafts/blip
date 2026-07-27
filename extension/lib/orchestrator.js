@@ -31,6 +31,21 @@ import { ADAPTERS, enabledAdapters } from '../adapters/index.js';
 const BADGE_WAITING = '#e23f33'; // contact-red
 const BADGE_FAILED = '#777';
 
+/**
+ * How deep a cold `seen` cache will classify.
+ *
+ * The list is updated_at-descending and a chat only becomes 🔴 when Claude
+ * replies — which bumps updated_at and lifts it to position 0. So a chat below
+ * this depth that we have NEVER seen provably has not changed in weeks, and
+ * fetching it cannot reveal a recent marker. Recording it instead is what keeps
+ * the first sweep after the full-history change from pulling every chat's
+ * entire message array.
+ *
+ * 50 preserves the pre-pagination fresh-install behaviour exactly: a new
+ * install still classifies the 50 most recent chats.
+ */
+const SEED_DEPTH = 50;
+
 /** Classify a normalized conversation by its last assistant message. */
 export function statusOf(conv) {
   return conv.lastAssistantText ? classify(conv.lastAssistantText) : null;
@@ -194,7 +209,7 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
           const list = await adapter.list();
           const seenP = seen[adapter.id] ?? {};
           const stillWaiting = new Set();
-          for (const c of list) {
+          for (const [index, c] of list.entries()) {
             let name = c.name;
             const snoozed = isSnoozed(snoozes, adapter.id, c.id, now);
             // A title whose 💤 disagrees with the schedule — typically an
@@ -202,7 +217,14 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
             // even though updatedAt hasn't changed, because the `seen`
             // shortcut below would otherwise keep the stale 💤 forever.
             const staleZzz = isWaitingTitle(name) && name.startsWith('💤') !== snoozed;
-            if (seenP[c.id] !== c.updatedAt || staleZzz) {
+            // A never-seen chat this far down cannot have a fresh marker (see
+            // SEED_DEPTH). Record it so the next sweep treats it as converged,
+            // rather than paying a full get() to learn nothing. staleZzz still
+            // wins, so a title whose 💤 disagrees with the schedule is fixed
+            // even if storage was cleared underneath it.
+            if (!(c.id in seenP) && index >= SEED_DEPTH && !staleZzz) {
+              seenP[c.id] = c.updatedAt;
+            } else if (seenP[c.id] !== c.updatedAt || staleZzz) {
               const conv = await adapter.get(c.id);
               if (!conv.isTemporary) {
                 name = await applyStatus(adapter, conv, settings, snoozed);

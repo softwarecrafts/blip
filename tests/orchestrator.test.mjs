@@ -464,3 +464,77 @@ test('listWaiting counts snoozed chats out, not 🔴 titles out', async () => {
   assert.equal(waiting.length, 1);
   assert.equal(snoozed.length, 1, 'still listed, just not counted');
 });
+
+// ── seed depth: never-seen chats below the depth are recorded, not fetched ──
+
+/** N unmarked filler conversations, in list order. */
+function filler(n) {
+  return Array.from({ length: n }, (_, i) => conv(`f${i}`, `Filler ${i}`));
+}
+
+test('sweep: a never-seen chat below SEED_DEPTH is recorded without a get()', async () => {
+  const deep = conv('deep', 'An old chat', { lastAssistantText: WAITING });
+  const a = makeFakeAdapter('claude', [...filler(50), deep]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+
+  const { sweep } = createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore: makeFakeSnoozeStore(),
+  });
+  await sweep();
+
+  assert.ok(!a.calls.get.includes('deep'), 'must not fetch a chat below the seed depth');
+  assert.equal(chrome.store.seen.claude.deep, deep.updatedAt, 'must still be recorded as seen');
+  assert.deepEqual(a.calls.rename, [], 'and must not be renamed');
+});
+
+test('sweep: a deep chat already titled 🔴 still counts toward the badge', async () => {
+  const deep = conv('deep', '🔴 Old blip');
+  const a = makeFakeAdapter('claude', [...filler(50), deep]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+
+  const { sweep } = createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore: makeFakeSnoozeStore(),
+  });
+  await sweep();
+
+  assert.equal(chrome.badge.text, '1', 'skipping the fetch must not skip the count');
+  assert.ok(!a.calls.get.includes('deep'));
+});
+
+test('sweep: a never-seen chat above SEED_DEPTH is still fetched and renamed', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', 'Chat one', { lastAssistantText: WAITING }),
+    ...filler(60),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+
+  const { sweep } = createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore: makeFakeSnoozeStore(),
+  });
+  await sweep();
+
+  assert.deepEqual(a.calls.rename, [['c1', '🔴 Chat one']]);
+});
+
+test('sweep: a SEEN chat below SEED_DEPTH whose updatedAt changed is still fetched', async () => {
+  // The rule keys off "never seen", not depth alone — a chat we are already
+  // tracking must keep converging no matter how far it has drifted down.
+  const deep = conv('deep', 'Old chat', { updatedAt: 'T2', lastAssistantText: WAITING });
+  const a = makeFakeAdapter('claude', [...filler(50), deep]);
+  globalThis.chrome = makeChromeStub({
+    settings: settings(['claude']),
+    seen: { claude: { deep: 'T1' } },
+  });
+
+  const { sweep } = createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore: makeFakeSnoozeStore(),
+  });
+  await sweep();
+
+  assert.ok(a.calls.get.includes('deep'));
+  assert.deepEqual(a.calls.rename, [['deep', '🔴 Old chat']]);
+});
