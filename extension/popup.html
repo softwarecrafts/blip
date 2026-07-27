@@ -2,10 +2,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <link rel="preload" href="fonts/chakra-petch-600.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/hanken-grotesk-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="ui/brand.css" />
     <style>
       :root { color-scheme: light dark; }
       body {
-        font: 13px/1.4 -apple-system, system-ui, sans-serif;
+        font: 13px/1.4 var(--font-body);
         width: 320px;
         margin: 0;
         padding: 12px 14px;
@@ -17,7 +20,12 @@
         margin-bottom: 10px;
       }
       h1 { font-size: 13px; font-weight: 600; margin: 0; }
-      #count { opacity: 0.6; font-variant-numeric: tabular-nums; }
+      #count {
+        opacity: 0.6;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
       ul { list-style: none; margin: 0; padding: 0; }
       li { margin: 0 0 2px; display: flex; align-items: center; gap: 4px; }
       a.chat {
@@ -107,7 +115,7 @@
       details#snoozed summary:hover { opacity: 1; }
       details#snoozed ul { margin-top: 6px; }
       #snoozed-list a.chat { opacity: 0.7; }
-      .wake { font-size: 11px; opacity: 0.6; white-space: nowrap; }
+      .wake { font-size: 11px; opacity: 0.6; white-space: nowrap; font-family: var(--font-mono); }
       footer {
         display: flex;
         justify-content: space-between;

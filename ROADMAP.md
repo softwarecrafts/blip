@@ -23,6 +23,13 @@ provider-neutral (Claude today, more later).
   phosphor green + reserved contact-red), Chakra Petch uppercase display.
 - **Landing page** (`landing/`) — static, GitHub-Pages-ready, radar hero.
 - **Docs** — README, PRIVACY, MIT LICENSE, store-listing draft.
+- **Full-history sweep** — `list()` walks every conversation via `offset`
+  paging instead of the most recent 50, so a 🔴 chat can no longer drift out of
+  the popup queue and lose its snooze. Never-seen chats below a seed depth are
+  recorded rather than fetched, which keeps the first sweep cheap.
+- **Extension brand type** — Chakra Petch / Hanken Grotesk / JetBrains Mono
+  bundled locally (no CDN is reachable from an extension page) behind a shared
+  `extension/ui/brand.css`, across popup, options and onboarding.
 
 ## ▶️ Next (build-side, mine)
 
@@ -76,10 +83,6 @@ routes `check-conversation` by the `platform` the content script tags.
   - _Caveats:_ uses the user's usage quota; the chat's enabled MCP tools could
     fire on that turn, so the canned prompt must say "summarize only, no tools."
 - **Bulk-archive ✅ chats** — sweep up resolved conversations in one action.
-- **History pagination** — currently only the most recent ~50 chats are swept;
-  paginate for full-history coverage if needed.
-- **Extension-page brand fonts** — adopt Chakra Petch in onboarding/options
-  (needs the font bundled locally for the extension, not a CDN link).
 - **Multi-AI** — ChatGPT, Gemini adapters. Architecture is ready (see the
   adapter recipe above); each needs endpoint recon + its two adapter halves +
   optional-permission wiring + onboarding copy.
