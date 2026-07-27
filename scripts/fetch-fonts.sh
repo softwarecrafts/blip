@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# Download the bliptracker brand faces into extension/fonts/.
+#
+# An extension cannot use the Google Fonts CDN the way landing/ does, so the
+# files are bundled. This script exists for provenance and reproducibility —
+# the .woff2 files are committed, so you do NOT need to run it to build or
+# load the extension. Re-run it only to refresh or add a face.
+#
+# It asks the Google Fonts CSS API for one face at a time and pulls the woff2
+# from the @font-face block whose unicode-range covers latin (U+0000-00FF),
+# rather than hardcoding hashed URLs that rotate.
+#
+# Usage:  bash scripts/fetch-fonts.sh
+set -euo pipefail
+
+# A modern desktop UA is required — the CSS API serves ttf to unknown clients.
+UA='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+DEST="$(cd "$(dirname "$0")/.." && pwd)/extension/fonts"
+mkdir -p "$DEST"
+
+# family_query  weight  style  outfile
+fetch_face() {
+  local family=$1 weight=$2 style=$3 out=$4
+  local ital=0
+  [ "$style" = italic ] && ital=1
+  local url="https://fonts.googleapis.com/css2?family=${family}:ital,wght@${ital},${weight}&display=swap"
+
+  local css src
+  css=$(curl -sfL -A "$UA" "$url")
+  src=$(printf '%s\n' "$css" \
+    | awk -v RS='}' '/U\+0000-00FF/ { print }' \
+    | grep -o 'https://[^)]*\.woff2' \
+    | head -1)
+
+  if [ -z "$src" ]; then
+    echo "FAILED: no latin woff2 found for ${family} ${weight} ${style}" >&2
+    exit 1
+  fi
+
+  curl -sfL -o "${DEST}/${out}" "$src"
+  printf '%-34s <- %s\n' "$out" "$src"
+}
+
+fetch_face 'Chakra+Petch'   600 normal chakra-petch-600.woff2
+fetch_face 'Chakra+Petch'   600 italic chakra-petch-600-italic.woff2
+fetch_face 'Chakra+Petch'   700 normal chakra-petch-700.woff2
+fetch_face 'Hanken+Grotesk' 400 normal hanken-grotesk-400.woff2
+fetch_face 'Hanken+Grotesk' 400 italic hanken-grotesk-400-italic.woff2
+fetch_face 'Hanken+Grotesk' 600 normal hanken-grotesk-600.woff2
+fetch_face 'JetBrains+Mono' 400 normal jetbrains-mono-400.woff2
+fetch_face 'JetBrains+Mono' 700 normal jetbrains-mono-700.woff2
+
+# All three families are OFL-1.1; shipping the fonts obliges shipping this.
+fetch_ofl() {
+  curl -sfL -o "${DEST}/OFL-$2.txt" \
+    "https://raw.githubusercontent.com/google/fonts/main/ofl/$1/OFL.txt"
+  printf '%-34s <- google/fonts/ofl/%s\n' "OFL-$2.txt" "$1"
+}
+
+fetch_ofl chakrapetch   Chakra-Petch
+fetch_ofl hankengrotesk Hanken-Grotesk
+fetch_ofl jetbrainsmono JetBrains-Mono
+
+echo
+echo "Done. ${DEST}"
+ls -lh "$DEST"
