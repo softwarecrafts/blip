@@ -16,6 +16,12 @@ provider-neutral (Claude today, more later).
   to mobile), and sit in a collapsed Snoozed section until a one-shot alarm
   wakes them. Wake schedule is local (`chrome.storage.local`), keyed per
   platform like `seen`.
+- **Ignore** — take an ongoing chat (health log, journal) off the radar for
+  good, from the popup. State lives entirely in the title as a `🔕` prefix (no
+  store, no alarm — unlike snooze): the sweep reads `isIgnored(name)` and skips
+  classifying, labelling, badging and queuing it. Syncs to mobile like any
+  label, and is honoured even if the marker is typed by hand. A collapsed
+  Ignored section restores it with **Track again**.
 - **Settings page** — enabled / star mirroring / sweep interval.
 - **Onboarding page** — opens on install: copy the preference prompt + deep link
   to Claude settings.

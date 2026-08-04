@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { titleTransform, stripPrefix } from '../extension/lib/titleTransform.js';
+import { titleTransform, stripPrefix, isIgnored } from '../extension/lib/titleTransform.js';
 
 test('titleTransform: null status leaves the title untouched', () => {
   assert.equal(titleTransform('Plan the launch', null), 'Plan the launch');
@@ -60,6 +60,56 @@ test('titleTransform: idempotent for every status × snoozed combination', () =>
     for (const snoozed of [false, true]) {
       const once = titleTransform('💤🔴 Plan the launch', status, snoozed);
       assert.equal(titleTransform(once, status, snoozed), once, `${status}/${snoozed}`);
+    }
+  }
+});
+
+/* --- ignore: the 🔕 prefix (off the radar) --- */
+
+test('isIgnored: true only for a 🔕 title', () => {
+  assert.equal(isIgnored('🔕 Weight log'), true);
+  assert.equal(isIgnored('🔕Weight log'), true); // no-space variant
+  assert.equal(isIgnored('  🔕 Weight log'), true); // leading whitespace
+  assert.equal(isIgnored('🔴 Plan the launch'), false);
+  assert.equal(isIgnored('Weight log'), false);
+});
+
+test('stripPrefix: removes 🔕, alone and stacked over a status', () => {
+  assert.equal(stripPrefix('🔕 Weight log'), 'Weight log');
+  assert.equal(stripPrefix('🔕🔴 Weight log'), 'Weight log');
+  assert.equal(stripPrefix('🔴 🔕 Weight log'), 'Weight log');
+});
+
+test('titleTransform: ignored wins over every status and snooze', () => {
+  for (const status of ['waiting', 'resolved', null]) {
+    for (const snoozed of [false, true]) {
+      assert.equal(
+        titleTransform('Weight log', status, snoozed, true),
+        '🔕 Weight log',
+        `${status}/${snoozed}`
+      );
+    }
+  }
+});
+
+test('titleTransform: ignoring strips any existing status prefix', () => {
+  assert.equal(titleTransform('🔴 Weight log', 'waiting', false, true), '🔕 Weight log');
+  assert.equal(titleTransform('💤🔴 Weight log', 'waiting', true, true), '🔕 Weight log');
+  assert.equal(titleTransform('✅ Weight log', 'resolved', false, true), '🔕 Weight log');
+});
+
+test('titleTransform: idempotent for every status × snoozed × ignored combination', () => {
+  for (const status of ['waiting', 'resolved', null]) {
+    for (const snoozed of [false, true]) {
+      for (const ignored of [false, true]) {
+        const start = ignored ? '🔕 Weight log' : '💤🔴 Weight log';
+        const once = titleTransform(start, status, snoozed, ignored);
+        assert.equal(
+          titleTransform(once, status, snoozed, ignored),
+          once,
+          `${status}/${snoozed}/${ignored}`
+        );
+      }
     }
   }
 });

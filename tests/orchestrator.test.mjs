@@ -538,3 +538,101 @@ test('sweep: a SEEN chat below SEED_DEPTH whose updatedAt changed is still fetch
   assert.ok(a.calls.get.includes('deep'));
   assert.deepEqual(a.calls.rename, [['deep', '🔴 Old chat']]);
 });
+
+// ── ignore integration (the 🔕 prefix, off the radar) ───────────────────────
+
+test('sweep: an ignored chat is left alone — no get(), no rename', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', '🔕 Weight log')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  await createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore: makeFakeSnoozeStore(),
+  }).sweep();
+
+  assert.deepEqual(a.calls.get, [], 'ignore is read from the listed title, never fetched');
+  assert.deepEqual(a.calls.rename, []);
+  assert.equal(chrome.store.seen.claude.c1, '2026-07-01T00:00:00Z', 'still recorded as seen');
+});
+
+test('sweep: a fresh 🔴 marker on an ignored chat never re-labels it', async () => {
+  // The whole point: an ongoing log keeps drawing 🔴 markers, but 🔕 wins.
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '🔕 Weight log', { lastAssistantText: WAITING }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  await createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore: makeFakeSnoozeStore(),
+  }).sweep();
+
+  assert.deepEqual(a.calls.rename, [], 'the 🔴 in the reply must not reach the title');
+  assert.equal(chrome.badge.text, '', 'and it never counts toward the badge');
+});
+
+test('sweep: ignored chats are kept off the badge', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '🔕 Weight log', { lastAssistantText: WAITING }),
+    conv('c2', 'Plan the launch', { lastAssistantText: WAITING }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  await createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore: makeFakeSnoozeStore(),
+  }).sweep();
+
+  assert.equal(chrome.badge.text, '1', 'only the tracked chat counts');
+  assert.deepEqual(a.calls.rename, [['c2', '🔴 Plan the launch']]);
+});
+
+test('sweep: a stacked 🔕🔴 title is normalised to a clean 🔕', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', '🔕🔴 Weight log')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  await createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore: makeFakeSnoozeStore(),
+  }).sweep();
+
+  assert.deepEqual(a.calls.rename, [['c1', '🔕 Weight log']]);
+  assert.deepEqual(a.calls.get, [], 'still no fetch — the title is all we need');
+});
+
+test('listWaiting: ignored chats go in their own section, off the queue and badge', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '🔴 Plan the launch'),
+    conv('c2', '🔕 Weight log'),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const { waiting, snoozed, ignored } = await createOrchestrator({
+    adapters: { claude: a },
+    snoozeStore: makeFakeSnoozeStore(),
+  }).listWaiting();
+
+  assert.deepEqual(waiting.map((i) => i.id), ['c1']);
+  assert.deepEqual(snoozed, []);
+  assert.deepEqual(ignored.map((i) => i.id), ['c2']);
+  assert.equal(ignored[0].url, 'https://claude.test/chat/c2', 'ignored rows are still links');
+  assert.equal(chrome.badge.text, '1', 'ignored chats never reach the count');
+});
+
+test('listWaiting: ignoring a snoozed chat drops its snooze', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', '🔕 Weight log')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const snoozeStore = makeFakeSnoozeStore({ claude: { c1: future() } });
+  await createOrchestrator({ adapters: { claude: a }, snoozeStore }).listWaiting();
+
+  assert.deepEqual(snoozeStore.peek(), {}, 'a chat off the radar has no reason to stay snoozed');
+});
+
+test('ignore/unignore rewrite the title immediately, not at next sweep', async () => {
+  const a = makeFakeAdapter('claude', [
+    conv('c1', '🔴 Plan the launch', { lastAssistantText: WAITING }),
+  ]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const o = createOrchestrator({ adapters: { claude: a }, snoozeStore: makeFakeSnoozeStore() });
+
+  await o.ignore('claude', 'c1');
+  assert.deepEqual(a.calls.rename.at(-1), ['c1', '🔕 Plan the launch']);
+
+  await o.unignore('claude', 'c1');
+  assert.deepEqual(a.calls.rename.at(-1), ['c1', '🔴 Plan the launch'], 'the live 🔴 marker is restored');
+});

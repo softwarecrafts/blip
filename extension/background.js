@@ -9,7 +9,8 @@ import { getSettings } from './lib/settings.js';
 import { createOrchestrator } from './lib/orchestrator.js';
 import { WAKE_ALARM } from './lib/snoozeStore.js';
 
-const { sweep, checkConversation, listWaiting, snooze, unsnooze } = createOrchestrator();
+const { sweep, checkConversation, listWaiting, snooze, unsnooze, ignore, unignore } =
+  createOrchestrator();
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   await resetAlarm();
@@ -44,6 +45,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     'run-sweep': () => sweep().then(() => listWaiting()),
     'snooze': () => snooze(msg.platform, msg.id, msg.wakeAt).then(() => listWaiting()),
     'unsnooze': () => unsnooze(msg.platform, msg.id).then(() => listWaiting()),
+    'ignore': () => ignore(msg.platform, msg.id).then(() => listWaiting()),
+    'unignore': () => unignore(msg.platform, msg.id).then(() => listWaiting()),
   };
   const handler = handlers[msg?.type];
   if (!handler) return;

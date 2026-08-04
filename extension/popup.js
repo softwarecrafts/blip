@@ -26,6 +26,9 @@ const emptyEl = document.getElementById('empty');
 const snoozedEl = document.getElementById('snoozed');
 const snoozedListEl = document.getElementById('snoozed-list');
 const snoozedCountEl = document.getElementById('snoozed-count');
+const ignoredEl = document.getElementById('ignored');
+const ignoredListEl = document.getElementById('ignored-list');
+const ignoredCountEl = document.getElementById('ignored-count');
 const panelEl = document.getElementById('snooze-panel');
 const dateEl = document.getElementById('snooze-date');
 const timeEl = document.getElementById('snooze-time');
@@ -69,6 +72,19 @@ const ICONS = {
     'M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41' +
       'M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41',
   ],
+  // Bell-off / eye: ignoring takes a chat off the radar; tracking watches it
+  // again. (The title itself carries the 🔕 marker — these are just controls.)
+  ignore: [
+    'M13.73 21a2 2 0 0 1-3.46 0',
+    'M18.63 13A17.89 17.89 0 0 1 18 8',
+    'M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14',
+    'M18 8a6 6 0 0 0-9.33-5',
+    'M1 1l22 22',
+  ],
+  track: [
+    'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z',
+    'M15 12a3 3 0 1 1-6 0 3 3 0 1 1 6 0z',
+  ],
 };
 
 function icon(paths) {
@@ -100,7 +116,7 @@ function rowButton(paths, title, onClick) {
   return btn;
 }
 
-function render({ waiting = [], snoozed = [] }) {
+function render({ waiting = [], snoozed = [], ignored = [] }) {
   closePanel();
   countEl.textContent = waiting.length ? `${waiting.length}` : '';
   emptyEl.hidden = waiting.length > 0;
@@ -109,6 +125,7 @@ function render({ waiting = [], snoozed = [] }) {
     ...waiting.map(({ platform, id, url, name }) => {
       const li = document.createElement('li');
       li.appendChild(chatLink(url, name));
+      li.appendChild(rowButton(ICONS.ignore, 'Ignore', () => send('ignore', { platform, id })));
       li.appendChild(rowButton(ICONS.snooze, 'Snooze', () => togglePanel(li, { platform, id })));
       return li;
     })
@@ -124,7 +141,19 @@ function render({ waiting = [], snoozed = [] }) {
       wake.className = 'wake';
       wake.textContent = formatWake(wakeAt);
       li.appendChild(wake);
+      li.appendChild(rowButton(ICONS.ignore, 'Ignore', () => send('ignore', { platform, id })));
       li.appendChild(rowButton(ICONS.wake, 'Wake now', () => send('unsnooze', { platform, id })));
+      return li;
+    })
+  );
+
+  ignoredEl.hidden = ignored.length === 0;
+  ignoredCountEl.textContent = ignored.length ? `(${ignored.length})` : '';
+  ignoredListEl.replaceChildren(
+    ...ignored.map(({ platform, id, url, name }) => {
+      const li = document.createElement('li');
+      li.appendChild(chatLink(url, name));
+      li.appendChild(rowButton(ICONS.track, 'Track again', () => send('unignore', { platform, id })));
       return li;
     })
   );
