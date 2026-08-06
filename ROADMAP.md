@@ -82,7 +82,6 @@ routes `check-conversation` by the `platform` the content script tags.
     message-tree params — more involved than the rename API we use today).
   - _Caveats:_ uses the user's usage quota; the chat's enabled MCP tools could
     fire on that turn, so the canned prompt must say "summarize only, no tools."
-- **Bulk-archive ✅ chats** — sweep up resolved conversations in one action.
 - **Multi-AI** — ChatGPT, Gemini adapters. Architecture is ready (see the
   adapter recipe above); each needs endpoint recon + its two adapter halves +
   optional-permission wiring + onboarding copy.
