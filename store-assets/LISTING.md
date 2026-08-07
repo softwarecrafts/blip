@@ -40,6 +40,21 @@ Productivity
  That's it. Labelling is exact — it reads the marker Claude wrote, it does not
  guess.
 
+ **A count you can trust**
+ A list only helps if you believe it. Three flagged chats you can actually deal
+ with is a to-do list. Three where one's waiting on a delivery and another is a
+ weight log you'll never finish is just noise, and once it's noise you stop
+ opening the popup at all. Two things keep it honest:
+ • **Snooze** gets the ones you can't do yet out of the way until you can. Pick
+   a time (in an hour, this evening, tomorrow 9am, next Monday, or a date of
+   your own) and it leaves the list and the badge until then. The title reads
+   💤🔴 meanwhile, so what's parked is still obvious from your phone. Nothing to
+   remember: it comes back on its own.
+ • **Ignore** stops the never-ending chats crying wolf. A weight log, a running
+   journal: every entry draws a fresh 🔴, and after a week of false alarms
+   you're skipping the whole list. Ignore it once and it's off for good, marked
+   🔕 so it stays off on every device. Track again if you change your mind.
+
  **Private by design**
  There's no server and no analytics. The extension talks only to claude.ai,
  using your existing login, exactly like the website does. Nothing is sent
@@ -49,6 +64,10 @@ Productivity
  **Optional extras**
  • Mirror status to stars, so your Starred section becomes your mobile queue.
  • Adjustable background re-check interval.
+
+ **Permissions note**
+ The `alarms` permission also drives snooze wake-ups, not just the periodic
+ re-check — worth saying if a reviewer asks.
 
  Unofficial community tool. Not affiliated with or endorsed by Anthropic. It
  relies on undocumented claude.ai endpoints and may break if those change.
@@ -62,7 +81,8 @@ Productivity
   IDs → last-updated timestamps so unchanged chats are skipped. No chat content
   is stored.
 - **alarms** — Schedules the periodic background re-check that catches chats you
-  finished on another device.
+  finished on another device, and the one-shot wake-up that un-snoozes a chat at
+  the time you chose.
 
 ## Single purpose statement
 

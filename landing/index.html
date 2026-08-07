@@ -3,36 +3,130 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>bliptracker — know which AI chats are waiting on you · bliptracker.xyz</title>
+    <title>bliptracker — know which Claude chats are waiting on you</title>
     <meta
       name="description"
-      content="bliptracker is a free, open-source browser extension that sweeps your AI chats and labels every title 🔴 active (waiting on you) or ✅ cleared — on desktop and mobile. Private, no server, MIT licensed. bliptracker.xyz"
+      content="Know which Claude chats are waiting on you. Free, open-source Chrome extension that labels titles 🔴 active / ✅ cleared and syncs to mobile. Snooze or ignore the rest."
     />
+    <link rel="canonical" href="https://bliptracker.xyz/" />
     <meta property="og:title" content="bliptracker — a scope for your AI chats" />
     <meta
       property="og:description"
-      content="Every chat is a blip on the scope. bliptracker sweeps the list and shows what's waiting on you. 🔴 / ✅, desktop + mobile. Open source, private, no server."
+      content="Every chat is a blip on the scope. bliptracker sweeps the list and shows what's waiting on you — and lets you snooze or ignore the rest. 🔴 / ✅, desktop + mobile. Open source, private, no server."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://bliptracker.xyz" />
+    <meta property="og:url" content="https://bliptracker.xyz/" />
     <meta property="og:image" content="https://bliptracker.xyz/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="bliptracker — a scope for your AI chats" />
-    <meta name="twitter:description" content="Every chat is a blip on the scope. bliptracker shows which AI chats are waiting on you. 🔴 / ✅, desktop and mobile." />
+    <meta name="twitter:description" content="Every chat is a blip on the scope. bliptracker shows which AI chats are waiting on you — and lets you snooze or ignore the rest. 🔴 / ✅, desktop and mobile." />
     <meta name="twitter:image" content="https://bliptracker.xyz/og.png" />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1f1c'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%232fd6a6' stroke-opacity='0.4' stroke-width='1.2'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%232fd6a6' stroke-opacity='0.55' stroke-width='1.2'/%3E%3Ccircle cx='21' cy='11' r='3' fill='%23ff5a4d'/%3E%3C/svg%3E"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Fonts are bundled, not CDN-served — see the TYPE block in styles.css.
+         Preload only the two faces the first screen actually paints with. -->
+    <link rel="preload" href="fonts/hanken-grotesk-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/chakra-petch-600.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="styles.css" />
+
+    <!-- Structured data. Answers are trimmed restatements of the visible FAQ,
+         which is what Google requires — they must not introduce claims the page
+         doesn't make. Deliberately NO aggregateRating: the Web Store listing has
+         no ratings yet, and inventing one is both a policy violation and a lie. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "SoftwareApplication",
+            "name": "bliptracker",
+            "url": "https://bliptracker.xyz/",
+            "applicationCategory": "BrowserApplication",
+            "applicationSubCategory": "Chrome Extension",
+            "operatingSystem": "Chrome",
+            "description": "A Chrome extension that labels your Claude chat titles 🔴 active or ✅ cleared so you can see which conversations are waiting on you, with snooze and ignore controls. Labels sync to mobile because they live in the chat title.",
+            "downloadUrl": "https://chromewebstore.google.com/detail/bliptracker/dhbhcgiohdpemjhlcmldipoioafeeemj",
+            "softwareHelp": "https://github.com/softwarecrafts/blip",
+            "license": "https://opensource.org/licenses/MIT",
+            "isAccessibleForFree": true,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "author": {
+              "@type": "Person",
+              "name": "Andrew Miller"
+            }
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Which AI assistants does it work with?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Claude, on claude.ai. That's the only adapter that ships today, and bliptracker itself runs on desktop Chrome. The insides are built one adapter per service, so ChatGPT and Gemini are designed and not yet written. Unofficial either way: no affiliation with Anthropic, OpenAI or Google."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Will it overwrite my existing AI preferences?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. You paste the line in yourself, and it appends to whatever you already have. You stay in full control of your own prompt — that's deliberate."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is my chat data sent anywhere?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. There's no backend, no analytics, no third parties. The only network requests go to your AI provider, authenticated by your own browser session — the same calls the site already makes."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does it work on the mobile app?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The markers do. They're part of the chat title, which is stored server-side, so they appear in the app wherever you see your chat list. bliptracker itself runs on desktop Chrome — it does the sweeping and labelling; your phone just shows the result."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What about chats that never actually finish?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Depends which kind. If you just can't face it yet, snooze it: pick a wake time and it leaves the queue and the badge until then. If it's something that will never resolve, like a weight log or a running journal, ignore it and bliptracker stops classifying it at all. Both are one click in the popup, and both undo. The point is the same either way: the number on the badge should only ever be things you can actually do."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What if the AI site changes and it breaks?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "It's possible — bliptracker uses undocumented endpoints. But it's open source, so it can be fixed, and the failure mode is gentle: at worst a marker goes stale, and you can edit any title back by hand. Stand down, nothing destructive."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is this made by the AI provider?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. bliptracker is an unofficial community tool, not affiliated with or endorsed by any AI provider. Just something built by someone who wanted their chats to have a scope."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <!-- ░░ NAV ░░ -->
@@ -113,6 +207,7 @@
             <li><span class="x">×</span> No way to tell cleared chats from active ones</li>
             <li><span class="x">×</span> The chat waiting on <em>you</em> scrolls off the screen</li>
             <li><span class="x">×</span> Tabs-as-todo-list goes dark the moment you restart</li>
+            <li><span class="x">×</span> The running journal you'll never finish shouts as loud as the tax deadline</li>
             <li><span class="x">×</span> None of it follows you to your phone</li>
           </ul>
         </div>
@@ -130,9 +225,11 @@
             <div class="step-n">1</div>
             <h3>Teach the chat to transmit</h3>
             <p>
-              A one-time paste into your AI preferences. It asks the assistant to end each
-              substantive reply with a tiny 🔴 / ✅ status line. It <strong>appends</strong> to
-              your existing preferences — nothing is overwritten.
+              One paste into your AI preferences, once. Installing opens a setup tab that links
+              you straight to the right page, so you're not hunting for it. The prompt asks the
+              assistant to end each substantive reply with a tiny 🔴 / ✅ status line. It
+              <strong>appends</strong> to whatever you've already got in there, nothing is
+              overwritten, and deleting it later switches the whole thing off.
             </p>
             <div class="code-block">
               <div class="code-head">
@@ -209,6 +306,49 @@ line with 🔴 or ✅ for any other purpose.</code></pre>
             </div>
           </article>
 
+          <article class="feature reveal feature-wide feature-flip">
+            <div class="feature-text">
+              <h3>A badge you can trust</h3>
+              <p>
+                A count only helps if you believe it. Three red blips you can actually deal
+                with is a to-do list. Three where one's waiting on a delivery and another is a
+                weight log you'll never finish is just noise, and once it's noise you stop
+                opening the popup at all.
+              </p>
+              <p class="feature-note">
+                <strong>Snooze</strong> gets the ones you can't do yet out of the way until you
+                can. Pick a time (in an hour, this evening, tomorrow 9am, next Monday, or a
+                date of your own) and it leaves the queue and the badge until then. The title
+                reads <span class="chip chip-quiet">💤🔴</span> meanwhile, so what's parked is
+                still obvious from your phone. Nothing to remember: it comes back on its own.
+              </p>
+              <p class="feature-note">
+                <strong>Ignore</strong> stops the never-ending chats crying wolf. A weight log,
+                a running journal: every entry draws a fresh 🔴, and after a week of false
+                alarms you're skipping the whole list. Ignore it once and it's off the scope
+                for good, marked <span class="chip chip-quiet">🔕</span> so it stays off on
+                every device. <em>Track again</em> if you change your mind.
+              </p>
+            </div>
+            <div class="feature-demo">
+              <div class="mini-pop">
+                <div class="mini-pop-head"><span>Active blips</span><span class="mini-count">2</span></div>
+                <ul>
+                  <li>🔴 Boiler quote — supplier reply</li>
+                  <li>🔴 Tax return — figures to confirm</li>
+                </ul>
+                <div class="mini-sec"><span>💤 Snoozed</span><span class="mini-count quiet">1</span></div>
+                <ul>
+                  <li class="dim"><span class="mini-name">Mortgage follow-up</span><span class="wake">wakes Mon 09:00</span></li>
+                </ul>
+                <div class="mini-sec"><span>🔕 Ignored</span><span class="mini-count quiet">1</span></div>
+                <ul>
+                  <li class="dim"><span class="mini-name">Weight log</span><span class="wake">off radar</span></li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
           <article class="feature reveal">
             <h3><span class="f-ico">📱</span> Syncs to mobile</h3>
             <p>
@@ -270,6 +410,15 @@ line with 🔴 or ✅ for any other purpose.</code></pre>
         </div>
         <div class="faq-list reveal">
           <details>
+            <summary>Which AI assistants does it work with?</summary>
+            <p>
+              Claude, on claude.ai. That's the only adapter that ships today, and bliptracker
+              itself runs on desktop Chrome. The insides are built one adapter per service, so
+              ChatGPT and Gemini are designed and not yet written. Unofficial either way: no
+              affiliation with Anthropic, OpenAI or Google.
+            </p>
+          </details>
+          <details>
             <summary>Will it overwrite my existing AI preferences?</summary>
             <p>
               No. You paste the line in yourself, and it <em>appends</em> to whatever you
@@ -291,6 +440,17 @@ line with 🔴 or ✅ for any other purpose.</code></pre>
               they appear in the app wherever you see your chat list. bliptracker itself runs on
               desktop Chrome — it does the sweeping and labelling; your phone just shows the
               result.
+            </p>
+          </details>
+          <details>
+            <summary>What about chats that never actually finish?</summary>
+            <p>
+              Depends which kind. If you just can't face it yet, <strong>snooze</strong> it:
+              pick a wake time and it leaves the queue and the badge until then. If it's
+              something that will never resolve, like a weight log or a running journal,
+              <strong>ignore</strong> it and bliptracker stops classifying it at all. Both are
+              one click in the popup, and both undo. The point is the same either way: the
+              number on the badge should only ever be things you can actually do.
             </p>
           </details>
           <details>
