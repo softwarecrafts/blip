@@ -61,6 +61,13 @@ After installing, do the one-time setup (below) and you're done.
    sits in a collapsed **Snoozed** section until it wakes — automatically, via a
    one-shot alarm, even between sweeps. Wake times live in local extension
    storage, so snooze schedules are per-machine.
+5. Some chats are ongoing by nature — a health log, a running journal — and never
+   get "resolved". **Ignore** one from the popup to take it off the radar for
+   good: its title gets a `🔕` prefix, it's never classified, labelled, badged or
+   queued again, and it drops into a collapsed **Ignored** section with a
+   **Track again** button to restore it. The `🔕` lives in the title itself, so
+   it syncs to mobile like any label — and the extension respects it even if you
+   type `🔕` into a title by hand.
 
 Classification is deterministic — a string match on the marker Claude wrote,
 never an after-the-fact guess.

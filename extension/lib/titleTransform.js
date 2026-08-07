@@ -23,10 +23,25 @@
  *  - A chat that was 🔴 and is now resolved: does ✅ replace 🔴? (It should,
  *    if you strip-then-add.)
  *  - Anything else you want — e.g. cap title length after prefixing.
+ *
+ * IGNORE: a chat can also be taken off the radar entirely. That state lives in
+ * the title too, as a '🔕' prefix, so it syncs to mobile and the extension
+ * picks it up automatically — even if you type '🔕' into a title by hand.
+ * Ignore WINS over every status: an ignored chat is never given 🔴/✅, and the
+ * sweep skips classifying it (see orchestrator). No local storage or alarm is
+ * needed, unlike snooze, because ignore has no time component.
  */
 
 // Longest first so stripPrefix removes '💤🔴' whole instead of leaving '🔴'.
-const PREFIXES = ['💤🔴', '💤', '🔴', '✅'];
+const PREFIXES = ['💤🔴', '🔕', '💤', '🔴', '✅'];
+
+/** The ignore marker, prepended to a title taken off the radar. */
+export const IGNORE_PREFIX = '🔕';
+
+/** True if this title is marked "ignored" (off the radar). */
+export function isIgnored(title) {
+  return title.trimStart().startsWith(IGNORE_PREFIX);
+}
 
 /** Remove all leading status prefixes (with or without spaces) from a title. */
 export function stripPrefix(title) {
@@ -48,13 +63,20 @@ export function stripPrefix(title) {
  * @param {string} currentTitle - the conversation's title right now
  * @param {'waiting' | 'resolved' | null} status - from classify()
  * @param {boolean} [snoozed] - chat has an unexpired snooze (isSnoozed)
+ * @param {boolean} [ignored] - chat is off the radar (isIgnored)
  * @returns {string} the title the conversation should have
  *
- * Snooze only decorates 'waiting': a snoozed 🔴 chat shows 💤🔴 (still red —
- * it does need you, just not yet). 'resolved' wins over snooze, and a chat
- * with no marker stays untouched even if a stale snooze entry exists.
+ * Ignore wins over everything: an ignored chat is normalised to '🔕 <base>'
+ * regardless of status or snooze, so it never carries a 🔴/✅ and reading its
+ * title back still reports it as ignored (idempotent). This is what lets the
+ * sweep skip classifying it while keeping the title tidy.
+ *
+ * Otherwise snooze only decorates 'waiting': a snoozed 🔴 chat shows 💤🔴 (still
+ * red — it does need you, just not yet). 'resolved' wins over snooze, and a
+ * chat with no marker stays untouched even if a stale snooze entry exists.
  */
-export function titleTransform(currentTitle, status, snoozed = false) {
+export function titleTransform(currentTitle, status, snoozed = false, ignored = false) {
+  if (ignored) return '🔕 ' + stripPrefix(currentTitle);
   if (!status) return currentTitle;
   const base = stripPrefix(currentTitle);
   if (status === 'resolved') return '✅ ' + base;

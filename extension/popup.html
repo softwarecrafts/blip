@@ -106,15 +106,15 @@
       #snooze-set:hover:not(:disabled) { background: color-mix(in srgb, currentColor 16%, transparent); }
       #snooze-set:disabled { opacity: 0.4; cursor: default; }
       .empty { opacity: 0.6; padding: 8px 0; }
-      details#snoozed {
+      details#snoozed, details#ignored {
         margin-top: 10px;
         padding-top: 10px;
         border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
       }
-      details#snoozed summary { cursor: pointer; opacity: 0.7; }
-      details#snoozed summary:hover { opacity: 1; }
-      details#snoozed ul { margin-top: 6px; }
-      #snoozed-list a.chat { opacity: 0.7; }
+      details#snoozed summary, details#ignored summary { cursor: pointer; opacity: 0.7; }
+      details#snoozed summary:hover, details#ignored summary:hover { opacity: 1; }
+      details#snoozed ul, details#ignored ul { margin-top: 6px; }
+      #snoozed-list a.chat, #ignored-list a.chat { opacity: 0.7; }
       .wake { font-size: 11px; opacity: 0.6; white-space: nowrap; font-family: var(--font-mono); }
       footer {
         display: flex;
@@ -156,6 +156,10 @@
     <details id="snoozed" hidden>
       <summary>Snoozed <span id="snoozed-count"></span></summary>
       <ul id="snoozed-list"></ul>
+    </details>
+    <details id="ignored" hidden>
+      <summary>Ignored <span id="ignored-count"></span></summary>
+      <ul id="ignored-list"></ul>
     </details>
     <footer>
       <button id="refresh">↻ Refresh</button>

@@ -16,13 +16,18 @@
  * the badge until its wake time. The schedule itself lives behind snoozeStore;
  * this file only asks "is this one snoozed" and "prune to what's still waiting".
  *
+ * Ignore role: a chat taken off the radar wears a 🔕 in its title and is never
+ * classified, re-labelled, badged, or queued. Unlike snooze, ignore has no
+ * store — the marker lives entirely in the (synced) title, so the sweep just
+ * reads isIgnored(name) and skips the chat.
+ *
  * All platform specifics live in adapters/*; this file only knows the generic
  * adapter interface (list/get/rename/setStarred/conversationUrl/capabilities).
  * Both the adapter registry and the snooze store are injectable so tests can
  * drive them with fakes.
  */
 import { classify } from './classify.js';
-import { titleTransform } from './titleTransform.js';
+import { titleTransform, isIgnored, stripPrefix } from './titleTransform.js';
 import { getSettings } from './settings.js';
 import { isSnoozed, partitionBySnooze } from './snooze.js';
 import { createSnoozeStore } from './snoozeStore.js';
@@ -128,8 +133,17 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
 
     const conv = await adapter.get(id);
     if (conv.isTemporary) return conv.name;
-    const snoozed = isSnoozed(await snoozeState.load(), platform, id, Date.now());
-    const name = await applyStatus(adapter, conv, settings, snoozed);
+
+    // Ignored chats are off the radar: never classified or re-labelled. Keep
+    // the 🔕 title normalised (strip any stale 🔴/💤🔴/✅) but do no more.
+    let name;
+    if (isIgnored(conv.name)) {
+      name = titleTransform(conv.name, null, false, true);
+      if (name !== conv.name) await adapter.rename(id, name);
+    } else {
+      const snoozed = isSnoozed(await snoozeState.load(), platform, id, Date.now());
+      name = await applyStatus(adapter, conv, settings, snoozed);
+    }
 
     const seen = await loadSeen();
     seen[platform] = { ...(seen[platform] ?? {}), [id]: conv.updatedAt };
@@ -148,10 +162,11 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
     const settings = await getSettings();
     if (!settings.enabled) {
       chrome.action.setBadgeText({ text: '' });
-      return { waiting: [], snoozed: [] };
+      return { waiting: [], snoozed: [], ignored: [] };
     }
     const now = Date.now();
     const items = [];
+    const ignoredItems = [];
     const keepByPlatform = {};
     const active = enabledAdapters(settings, adapters);
     let okCount = 0;
@@ -159,6 +174,19 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
       try {
         const waitingIds = new Set();
         for (const c of await adapter.list()) {
+          // Ignored chats never enter the queue or the keep-set (so a stale
+          // snooze on a now-ignored chat is pruned away). They get their own
+          // section in the popup instead.
+          if (isIgnored(c.name)) {
+            ignoredItems.push({
+              platform: adapter.id,
+              id: c.id,
+              name: c.name,
+              url: adapter.conversationUrl(c.id),
+              updatedAt: c.updatedAt,
+            });
+            continue;
+          }
           if (isWaitingTitle(c.name)) {
             waitingIds.add(c.id);
             items.push({
@@ -183,7 +211,7 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
     // Snoozing from the popup never runs a sweep, so without this the badge
     // would keep the pre-snooze count until the next poll (up to pollMinutes).
     setBadge({ activeCount: active.length, okCount, waitingCount: queue.waiting.length });
-    return queue;
+    return { ...queue, ignored: ignoredItems };
   }
 
   async function sweep() {
@@ -211,6 +239,15 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
           const stillWaiting = new Set();
           for (const [index, c] of list.entries()) {
             let name = c.name;
+            // Off the radar: skip classification entirely. Keep the 🔕 title
+            // normalised, record it as converged, and leave it out of the
+            // badge/queue. Read from the listed title, so no get() is needed.
+            if (isIgnored(name)) {
+              const norm = titleTransform(name, null, false, true);
+              if (norm !== name) await adapter.rename(c.id, norm);
+              seenP[c.id] = c.updatedAt;
+              continue;
+            }
             const snoozed = isSnoozed(snoozes, adapter.id, c.id, now);
             // A title whose 💤 disagrees with the schedule — typically an
             // expired snooze on an otherwise-quiet chat — must be re-applied
@@ -275,5 +312,31 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
     await checkConversation(platform, id);
   }
 
-  return { sweep, checkConversation, listWaiting, snooze, unsnooze };
+  /**
+   * Take a chat off the radar: prepend 🔕 and strip any 🔴/💤🔴/✅ so it looks
+   * tidy at once. The marker lives in the (synced) title — there is no store to
+   * write — and the next sweep will read isIgnored() and leave it alone.
+   */
+  async function ignore(platform, id) {
+    const adapter = adapters[platform];
+    if (!adapter) return;
+    const conv = await adapter.get(id);
+    const name = titleTransform(conv.name, null, false, true); // '🔕 ' + base
+    if (name !== conv.name) await adapter.rename(id, name);
+  }
+
+  /**
+   * Put a chat back on the radar: strip the 🔕, then re-check it so the current
+   * 🔴/✅ marker is re-applied immediately rather than at the next sweep.
+   */
+  async function unignore(platform, id) {
+    const adapter = adapters[platform];
+    if (!adapter) return;
+    const conv = await adapter.get(id);
+    const base = stripPrefix(conv.name);
+    if (base !== conv.name) await adapter.rename(id, base);
+    await checkConversation(platform, id);
+  }
+
+  return { sweep, checkConversation, listWaiting, snooze, unsnooze, ignore, unignore };
 }
