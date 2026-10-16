@@ -28,3 +28,9 @@ test('classify: reads the LAST marker when a reply quotes an earlier one', () =>
   const text = '🔴 Waiting on you: old\n\nActually done now.\n\n✅ Resolved — safe to archive this chat.';
   assert.equal(classify(text), 'resolved');
 });
+
+test('classify: tolerates markdown wrapped around the marker', () => {
+  assert.equal(classify('Reply.\n\n**🔴 Waiting on you: decide**'), 'waiting');
+  assert.equal(classify('Reply.\n\n> ✅ Resolved — safe to archive this chat.'), 'resolved');
+  assert.equal(classify('Reply.\n\n- 🔴 Waiting on you: decide'), 'waiting');
+});

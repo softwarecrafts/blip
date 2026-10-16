@@ -21,6 +21,12 @@
  * store — the marker lives entirely in the (synced) title, so the sweep just
  * reads isIgnored(name) and skips the chat.
  *
+ * Health role: platforms change their private APIs without notice, and the
+ * failure mode used to be total silence — titles just stopped updating. Every
+ * sweep and on-demand check now records, per platform, the last error and
+ * whether replies came back unreadable (see recordHealth). The badge turns '!'
+ * and the popup explains, until a later sweep proves the problem is gone.
+ *
  * All platform specifics live in adapters/*; this file only knows the generic
  * adapter interface (list/get/rename/setStarred/conversationUrl/capabilities).
  * Both the adapter registry and the snooze store are injectable so tests can
@@ -75,8 +81,12 @@ export function isWaitingTitle(name) {
  * Both sweep() and listWaiting() call this, so the badge re-syncs the moment
  * the popup does anything, rather than waiting for the next poll.
  */
-function setBadge({ activeCount, okCount, waitingCount }) {
-  if (activeCount && okCount === 0) {
+function setBadge({ activeCount, okCount, waitingCount, problem = false }) {
+  // A recorded problem only takes the badge when there is no count to show:
+  // "titles silently stopped updating" usually looks like a count of zero, and
+  // a real count must never be hidden by a partial failure. The popup always
+  // spells the problem out either way.
+  if ((activeCount && okCount === 0) || (problem && !waitingCount)) {
     chrome.action.setBadgeBackgroundColor({ color: BADGE_FAILED });
     chrome.action.setBadgeText({ text: '!' });
   } else {
@@ -84,6 +94,32 @@ function setBadge({ activeCount, okCount, waitingCount }) {
     chrome.action.setBadgeText({ text: waitingCount ? String(waitingCount) : '' });
   }
 }
+
+/** Pure: true if any platform's health record carries an unresolved problem. */
+export function hasProblem(health = {}) {
+  return Object.values(health).some((h) => h?.error || h?.unreadableAt);
+}
+
+/**
+ * Pure: the popup's warning lines for a health record. `labels` maps platform
+ * id -> display name. Separate from the popup so the wording is testable.
+ */
+export function healthProblems(health = {}, labels = {}) {
+  const out = [];
+  for (const [platform, h] of Object.entries(health)) {
+    const label = labels[platform] ?? platform;
+    if (h?.unreadableAt) {
+      out.push({
+        platform,
+        message: `Couldn't read ${label} replies — the site may have changed, so titles won't update.`,
+      });
+    }
+    if (h?.error) out.push({ platform, message: `${label}: ${h.error}` });
+  }
+  return out;
+}
+
+const errText = (e) => String(e?.message ?? e);
 
 export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
   let sweeping = false;
@@ -116,6 +152,38 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
     return name;
   }
 
+  /**
+   * Merge one observation into the stored per-platform health record.
+   *
+   * - `error`: set on any failure; cleared only by `sweepClean` (a sweep with no
+   *   failures), because failed chats are not marked seen and so are retried
+   *   every sweep — a clean sweep really does mean the error is gone.
+   * - `unreadableAt`: sticky. Set when a reply came back with no readable text,
+   *   cleared only once a reply IS read. It can't be cleared by a clean sweep,
+   *   because unreadable chats are marked seen and won't be re-fetched.
+   */
+  async function recordHealth(platform, { error, sawReadable, sawUnreadable, sweepClean }) {
+    const all = (await chrome.storage.local.get('health')).health ?? {};
+    const h = { ...(all[platform] ?? {}) };
+    const at = Date.now();
+    if (error) Object.assign(h, { error, errorAt: at });
+    else if (sweepClean) {
+      delete h.error;
+      delete h.errorAt;
+    }
+    if (sawUnreadable) h.unreadableAt = at;
+    else if (sawReadable) delete h.unreadableAt;
+    all[platform] = h;
+    await chrome.storage.local.set({ health: all });
+    return all;
+  }
+
+  /** Readability observation for one fetched conversation. */
+  const readability = (conv) => ({
+    sawUnreadable: !!conv.unreadable,
+    sawReadable: !conv.unreadable && !!conv.lastAssistantText,
+  });
+
   // ── seen cache: { [platform]: { [id]: updatedAt } } ───────────────────────
   async function loadSeen() {
     let seen = (await chrome.storage.local.get('seen')).seen ?? {};
@@ -131,8 +199,15 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
     const adapter = adapters[platform];
     if (!adapter) return null;
 
-    const conv = await adapter.get(id);
+    let conv;
+    try {
+      conv = await adapter.get(id);
+    } catch (e) {
+      await recordHealth(platform, { error: errText(e) });
+      throw e;
+    }
     if (conv.isTemporary) return conv.name;
+    await recordHealth(platform, readability(conv));
 
     // Ignored chats are off the radar: never classified or re-labelled. Keep
     // the 🔕 title normalised (strip any stale 🔴/💤🔴/✅) but do no more.
@@ -142,7 +217,12 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
       if (name !== conv.name) await adapter.rename(id, name);
     } else {
       const snoozed = isSnoozed(await snoozeState.load(), platform, id, Date.now());
-      name = await applyStatus(adapter, conv, settings, snoozed);
+      try {
+        name = await applyStatus(adapter, conv, settings, snoozed);
+      } catch (e) {
+        await recordHealth(platform, { error: errText(e) });
+        throw e;
+      }
     }
 
     const seen = await loadSeen();
@@ -162,9 +242,10 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
     const settings = await getSettings();
     if (!settings.enabled) {
       chrome.action.setBadgeText({ text: '' });
-      return { waiting: [], snoozed: [], ignored: [] };
+      return { waiting: [], snoozed: [], ignored: [], problems: [] };
     }
     const now = Date.now();
+    const listErrors = [];
     const items = [];
     const ignoredItems = [];
     const keepByPlatform = {};
@@ -204,14 +285,27 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
         okCount++;
       } catch (e) {
         console.error(`[bliptracker:${adapter.id}] list failed:`, e);
+        listErrors.push({ platform: adapter.id, message: `${adapter.label}: ${errText(e)}` });
       }
     }
+    const health = (await chrome.storage.local.get('health')).health ?? {};
     const pruned = await snoozeState.prune(keepByPlatform, now);
     const queue = partitionBySnooze(items, pruned, now);
     // Snoozing from the popup never runs a sweep, so without this the badge
     // would keep the pre-snooze count until the next poll (up to pollMinutes).
-    setBadge({ activeCount: active.length, okCount, waitingCount: queue.waiting.length });
-    return { ...queue, ignored: ignoredItems };
+    // Only report health for platforms that are still switched on.
+    const activeHealth = Object.fromEntries(
+      active.filter((a) => health[a.id]).map((a) => [a.id, health[a.id]])
+    );
+    const labels = Object.fromEntries(active.map((a) => [a.id, a.label]));
+    const problems = [...listErrors, ...healthProblems(activeHealth, labels)];
+    setBadge({
+      activeCount: active.length,
+      okCount,
+      waitingCount: queue.waiting.length,
+      problem: hasProblem(activeHealth),
+    });
+    return { ...queue, ignored: ignoredItems, problems };
   }
 
   async function sweep() {
@@ -231,8 +325,10 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
       const keepByPlatform = {};
       let waitingCount = 0;
       let okCount = 0;
+      let health = {};
 
       for (const adapter of active) {
+        const obs = { error: null, sawReadable: false, sawUnreadable: false };
         try {
           const list = await adapter.list();
           const seenP = seen[adapter.id] ?? {};
@@ -262,10 +358,21 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
             if (!(c.id in seenP) && index >= SEED_DEPTH && !staleZzz) {
               seenP[c.id] = c.updatedAt;
             } else if (seenP[c.id] !== c.updatedAt || staleZzz) {
-              const conv = await adapter.get(c.id);
-              if (!conv.isTemporary) {
-                name = await applyStatus(adapter, conv, settings, snoozed);
-                seenP[c.id] = c.updatedAt;
+              // One chat failing (a 500, a rename the server refuses) must not
+              // abort the rest of the sweep. It stays unseen, so it is retried
+              // next sweep, and the error is surfaced via recordHealth.
+              try {
+                const conv = await adapter.get(c.id);
+                if (!conv.isTemporary) {
+                  const r = readability(conv);
+                  obs.sawUnreadable ||= r.sawUnreadable;
+                  obs.sawReadable ||= r.sawReadable;
+                  name = await applyStatus(adapter, conv, settings, snoozed);
+                  seenP[c.id] = c.updatedAt;
+                }
+              } catch (e) {
+                console.error(`[bliptracker:${adapter.id}] check ${c.id} failed:`, e);
+                obs.error ??= errText(e);
               }
             }
             if (isWaitingTitle(name)) {
@@ -284,14 +391,17 @@ export function createOrchestrator({ adapters = ADAPTERS, snoozeStore } = {}) {
           okCount++;
         } catch (e) {
           console.error(`[bliptracker:${adapter.id}] sweep failed:`, e);
+          obs.error ??= errText(e);
         }
+        health = await recordHealth(adapter.id, { ...obs, sweepClean: !obs.error });
       }
 
       await chrome.storage.local.set({ seen });
       // Also re-arms the 'snooze-wake' alarm for the next wake time.
       await snoozeState.prune(keepByPlatform, now);
 
-      setBadge({ activeCount: active.length, okCount, waitingCount });
+      const activeHealth = Object.fromEntries(active.map((a) => [a.id, health[a.id]]));
+      setBadge({ activeCount: active.length, okCount, waitingCount, problem: hasProblem(activeHealth) });
     } finally {
       sweeping = false;
     }

@@ -29,6 +29,8 @@ const snoozedCountEl = document.getElementById('snoozed-count');
 const ignoredEl = document.getElementById('ignored');
 const ignoredListEl = document.getElementById('ignored-list');
 const ignoredCountEl = document.getElementById('ignored-count');
+const problemsEl = document.getElementById('problems');
+const problemsListEl = document.getElementById('problems-list');
 const panelEl = document.getElementById('snooze-panel');
 const dateEl = document.getElementById('snooze-date');
 const timeEl = document.getElementById('snooze-time');
@@ -116,8 +118,16 @@ function rowButton(paths, title, onClick) {
   return btn;
 }
 
-function render({ waiting = [], snoozed = [], ignored = [] }) {
+function render({ waiting = [], snoozed = [], ignored = [], problems = [] }) {
   closePanel();
+  problemsEl.hidden = problems.length === 0;
+  problemsListEl.replaceChildren(
+    ...problems.map(({ message }) => {
+      const li = document.createElement('li');
+      li.textContent = message;
+      return li;
+    })
+  );
   countEl.textContent = waiting.length ? `${waiting.length}` : '';
   emptyEl.hidden = waiting.length > 0;
 

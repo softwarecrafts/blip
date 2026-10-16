@@ -636,3 +636,78 @@ test('ignore/unignore rewrite the title immediately, not at next sweep', async (
   await o.unignore('claude', 'c1');
   assert.deepEqual(a.calls.rename.at(-1), ['c1', '🔴 Plan the launch'], 'the live 🔴 marker is restored');
 });
+
+// ── health: a broken platform must say so, not fail silently ────────────────
+
+test('sweep: one chat failing does not abort the rest, and is retried', async () => {
+  const a = makeFakeAdapter(
+    'claude',
+    [conv('c1', 'Broken'), conv('c2', 'Fine', { lastAssistantText: WAITING })],
+    { getThrows: ['c1'] }
+  );
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  await createOrchestrator({ adapters: { claude: a } }).sweep();
+
+  assert.deepEqual(a.calls.rename, [['c2', '🔴 Fine']], 'c2 still labelled');
+  assert.ok(!('c1' in chrome.store.seen.claude), 'failed chat stays unseen for retry');
+  assert.match(chrome.store.health.claude.error, /get c1 -> HTTP 500/);
+});
+
+test('sweep: a clean sweep clears a recorded error', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', 'Chat')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  chrome.store.health = { claude: { error: 'old', errorAt: 1 } };
+  await createOrchestrator({ adapters: { claude: a } }).sweep();
+
+  assert.equal(chrome.store.health.claude.error, undefined);
+});
+
+test('sweep: unreadable replies are flagged, badge shows ! when nothing waits', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', 'Chat', { unreadable: true })]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  await createOrchestrator({ adapters: { claude: a } }).sweep();
+
+  assert.ok(chrome.store.health.claude.unreadableAt);
+  assert.equal(chrome.badge.text, '!');
+});
+
+test('sweep: unreadable flag is sticky until a reply is actually read', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', 'Chat', { lastAssistantText: WAITING })]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  chrome.store.health = { claude: { unreadableAt: 1 } };
+  await createOrchestrator({ adapters: { claude: a } }).sweep();
+
+  assert.equal(chrome.store.health.claude.unreadableAt, undefined);
+  assert.equal(chrome.badge.text, '1');
+});
+
+test('sweep: a problem never hides a real waiting count', async () => {
+  const a = makeFakeAdapter(
+    'claude',
+    [conv('c1', 'Broken'), conv('c2', 'Fine', { lastAssistantText: WAITING })],
+    { getThrows: ['c1'] }
+  );
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  await createOrchestrator({ adapters: { claude: a } }).sweep();
+
+  assert.equal(chrome.badge.text, '1');
+});
+
+test('listWaiting: returns problems for the popup', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', 'Chat')]);
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  chrome.store.health = { claude: { unreadableAt: 1, error: 'PUT x -> HTTP 403' } };
+  const { problems } = await createOrchestrator({ adapters: { claude: a } }).listWaiting();
+
+  assert.equal(problems.length, 2);
+  assert.match(problems[0].message, /Couldn't read claude replies/);
+  assert.match(problems[1].message, /HTTP 403/);
+});
+
+test('checkConversation: records a get failure and rethrows', async () => {
+  const a = makeFakeAdapter('claude', [conv('c1', 'Chat')], { getThrows: ['c1'] });
+  globalThis.chrome = makeChromeStub({ settings: settings(['claude']) });
+  const o = createOrchestrator({ adapters: { claude: a } });
+  await assert.rejects(o.checkConversation('claude', 'c1'));
+  assert.match(chrome.store.health.claude.error, /HTTP 500/);
+});

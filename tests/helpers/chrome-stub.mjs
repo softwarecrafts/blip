@@ -33,6 +33,9 @@ export function makeChromeStub({ settings, seen, snoozes } = {}) {
         async set(obj) {
           Object.assign(store, structuredClone(obj));
         },
+        async remove(key) {
+          for (const k of [].concat(key)) delete store[k];
+        },
       },
       onChanged: noop,
     },

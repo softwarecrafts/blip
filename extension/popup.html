@@ -106,6 +106,20 @@
       #snooze-set:hover:not(:disabled) { background: color-mix(in srgb, currentColor 16%, transparent); }
       #snooze-set:disabled { opacity: 0.4; cursor: default; }
       .empty { opacity: 0.6; padding: 8px 0; }
+      /* Health warning: shown when a platform's API changed or errored, so a
+         broken extension says so instead of silently labelling nothing. */
+      #problems[hidden] { display: none; }
+      #problems {
+        margin: 0 0 10px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid color-mix(in srgb, #e23f33 45%, transparent);
+        background: color-mix(in srgb, #e23f33 10%, transparent);
+        font-size: 12px;
+      }
+      #problems strong { display: block; margin-bottom: 2px; }
+      #problems ul { margin: 0; }
+      #problems li { display: block; margin: 2px 0 0; overflow-wrap: anywhere; }
       details#snoozed, details#ignored {
         margin-top: 10px;
         padding-top: 10px;
@@ -142,6 +156,10 @@
       <h1>Waiting on you</h1>
       <span id="count"></span>
     </header>
+    <div id="problems" role="alert" hidden>
+      <strong>⚠ bliptracker isn't working right</strong>
+      <ul id="problems-list"></ul>
+    </div>
     <ul id="list"></ul>
     <div id="empty" class="empty" hidden>Nothing waiting. 🎉</div>
     <div id="snooze-panel" hidden>

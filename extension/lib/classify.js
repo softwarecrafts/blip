@@ -15,7 +15,9 @@ export function classify(messageText) {
   const lines = messageText
     .trim()
     .split('\n')
-    .map((l) => l.trim())
+    // Raw markdown can wrap the marker (`**🔴 …**`, `> 🔴 …`, `- ✅ …`) depending
+    // on which field the adapter read it from; peel that off before matching.
+    .map((l) => l.trim().replace(/^(?:[*_>#~`-]+\s*)+/, ''))
     .filter(Boolean);
 
   // The marker is the final line of the reply, but allow a little slack in

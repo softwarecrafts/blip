@@ -35,6 +35,7 @@ export function makeFakeAdapter(id, conversations, opts = {}) {
 
     async get(cid) {
       calls.get.push(cid);
+      if (opts.getThrows?.includes(cid)) throw new Error(`get ${cid} -> HTTP 500`);
       return { ...state.get(cid) };
     },
 
@@ -66,5 +67,6 @@ export function conv(id, name, opts = {}) {
     isStarred: opts.isStarred ?? false,
     isTemporary: opts.isTemporary ?? false,
     lastAssistantText: opts.lastAssistantText ?? '',
+    unreadable: opts.unreadable ?? false,
   };
 }
